@@ -1,5 +1,8 @@
 # Pom Assistant
 
+# Intelij 文档
+- https://plugins.jetbrains.com/docs/intellij/welcome.html
+
 # 前言
 作为一个Java开发者，公司大部分项目还是maven工程，虽然gradle依赖看起来比较简洁、可以写丰富的Task，但是maven有丰富的插件，也比较简单，相比gradle而言，也没有那么多的坑，还是用地比较多的。同时也有一些问题，比如maven的pom.xml是xml格式，一个依赖至少5行标签。当一个项目比较大时，引用的依赖也比较多，看起来也比较乱，个人习惯上把dependency标签的version提取到properties标签里。但是作者每次这样做就觉比较繁琐，于是心生一个想法，自己写idea插件，方便自己的操作。于是在抗争冠状病毒的这个春节，写了这个插件。
 

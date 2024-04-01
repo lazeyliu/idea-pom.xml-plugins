@@ -5,6 +5,7 @@ import com.github.rxyor.plugin.pom.assistant.common.dom.processor.FormatPomProce
 import com.github.rxyor.plugin.pom.assistant.common.dom.processor.GroupSortPomProcessor;
 import com.github.rxyor.plugin.pom.assistant.common.psi.util.PsiUtil;
 import com.intellij.ide.highlighter.XmlFileType;
+import com.intellij.openapi.actionSystem.ActionUpdateThread;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.command.WriteCommandAction;
@@ -17,9 +18,9 @@ import com.intellij.psi.xml.XmlFile;
 import org.jetbrains.annotations.NotNull;
 
 /**
- *<p>
+ * <p>
  *
- *</p>
+ * </p>
  *
  * @author liuyang
  * @date 2020/2/4 周二 14:47:00
@@ -28,12 +29,17 @@ import org.jetbrains.annotations.NotNull;
 public class GroupSortAction extends AbstractPomAction {
 
     @Override
+    public @NotNull ActionUpdateThread getActionUpdateThread() {
+        return ActionUpdateThread.EDT;
+    }
+
+    @Override
     public void actionPerformed(@NotNull AnActionEvent e) {
         CommandProcessor.getInstance().executeCommand(e.getProject(),
-            () -> {
-                sort(e);
-            }
-            , App.GROUP_ID, App.GROUP_ID);
+                () -> {
+                    sort(e);
+                }
+                , App.GROUP_ID, App.GROUP_ID);
     }
 
     private void sort(AnActionEvent e) {
@@ -56,7 +62,7 @@ public class GroupSortAction extends AbstractPomAction {
         final Project project = psiFile.getProject();
         final Document document = PsiUtil.getDocument(psiFile);
         final XmlFile xmlFile = (XmlFile) PsiFileFactory.getInstance(project)
-            .createFileFromText("", XmlFileType.INSTANCE, context);
+                .createFileFromText("", XmlFileType.INSTANCE, context);
         document.setText(xmlFile.getText());
         PsiDocumentManager.getInstance(project).commitDocument(document);
     }

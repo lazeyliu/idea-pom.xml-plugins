@@ -106,9 +106,10 @@
         </action>
 
         <group id="PomAssistant"
-               popup="true"
                text="Pom Assistant"
-               icon="PomAssistantPluginIcons.mavenLogo">
+               popup="true"
+               icon="Icons.mavenLogo"
+        >
             <add-to-group group-id="EditorPopupMenu"
                           anchor="after"
                           relative-to-action="CopyReference"/>

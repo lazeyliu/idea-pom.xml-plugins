@@ -3,15 +3,11 @@ package com.github.rxyor.plugin.pom.assistant.action;
 import com.github.rxyor.plugin.pom.assistant.common.constant.PluginConst.App;
 import com.github.rxyor.plugin.pom.assistant.common.maven.model.DependencyPair;
 import com.github.rxyor.plugin.pom.assistant.common.maven.model.PluginPair;
-import com.github.rxyor.plugin.pom.assistant.common.maven.util.MavenDependencyUtil;
-import com.github.rxyor.plugin.pom.assistant.common.maven.util.MavenIdUtil;
-import com.github.rxyor.plugin.pom.assistant.common.maven.util.MavenPluginUtil;
-import com.github.rxyor.plugin.pom.assistant.common.maven.util.MavenProjectUtil;
-import com.github.rxyor.plugin.pom.assistant.common.maven.util.MavenPropertyUtil;
-import com.github.rxyor.plugin.pom.assistant.common.maven.util.MavenUtil;
+import com.github.rxyor.plugin.pom.assistant.common.maven.util.*;
 import com.github.rxyor.plugin.pom.assistant.common.maven.util.MavenUtil.TagType;
 import com.github.rxyor.plugin.pom.assistant.common.notification.util.NotificationUtil;
 import com.github.rxyor.plugin.pom.assistant.common.psi.util.PsiUtil;
+import com.intellij.openapi.actionSystem.ActionUpdateThread;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.command.WriteCommandAction;
@@ -25,9 +21,9 @@ import org.jetbrains.idea.maven.dom.model.MavenDomProjectModel;
 import org.jetbrains.idea.maven.model.MavenId;
 
 /**
- *<p>
+ * <p>
  *
- *</p>
+ * </p>
  *
  * @author liuyang
  * @date 2020/1/27 周一 15:31:00
@@ -35,14 +31,18 @@ import org.jetbrains.idea.maven.model.MavenId;
  */
 public class ExtractVersionAction extends AbstractPomAction {
 
+    @Override
+    public @NotNull ActionUpdateThread getActionUpdateThread() {
+        return ActionUpdateThread.EDT;
+    }
 
     @Override
     public void actionPerformed(@NotNull AnActionEvent e) {
         CommandProcessor.getInstance().executeCommand(e.getProject(),
-            (Runnable) () -> {
-                extractAndReplaceVersion(e);
-            }
-            , App.GROUP_ID, App.GROUP_ID);
+                (Runnable) () -> {
+                    extractAndReplaceVersion(e);
+                }
+                , App.GROUP_ID, App.GROUP_ID);
     }
 
     /**
@@ -57,7 +57,7 @@ public class ExtractVersionAction extends AbstractPomAction {
         }
         final PsiElement psiElement = PsiUtil.getClickPsiElement(e);
         final MavenDomProjectModel model = MavenProjectUtil
-            .getMavenDomProjectModel(psiFile);
+                .getMavenDomProjectModel(psiFile);
 
         TagType tagType = MavenUtil.findClickParentTagType(psiElement);
         if (tagType == null) {
@@ -90,7 +90,7 @@ public class ExtractVersionAction extends AbstractPomAction {
 
     private void replaceAndRemoveForDependency(MavenDomProjectModel model, MavenId mavenId, String placeholder) {
         DependencyPair dependencyPair = MavenDependencyUtil
-            .findDependency(model, mavenId);
+                .findDependency(model, mavenId);
 
         //点击依赖版本号替换为占位符
         resetVersion(dependencyPair.getDependency(), placeholder);
@@ -101,7 +101,7 @@ public class ExtractVersionAction extends AbstractPomAction {
 
     private void replaceAndRemoveForPlugin(MavenDomProjectModel model, MavenId mavenId, String placeholder) {
         PluginPair pluginPair = MavenPluginUtil
-            .findPlugin(model, mavenId);
+                .findPlugin(model, mavenId);
 
         //点击依赖版本号替换为占位符
         resetVersion(pluginPair.getPlugin(), placeholder);

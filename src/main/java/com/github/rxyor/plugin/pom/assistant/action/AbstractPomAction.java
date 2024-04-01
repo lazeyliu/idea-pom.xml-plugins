@@ -2,6 +2,7 @@ package com.github.rxyor.plugin.pom.assistant.action;
 
 import com.github.rxyor.plugin.pom.assistant.common.notification.util.NotificationUtil;
 import com.github.rxyor.plugin.pom.assistant.common.psi.util.PsiUtil;
+import com.intellij.openapi.actionSystem.ActionUpdateThread;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.Presentation;
@@ -11,15 +12,19 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.idea.maven.utils.actions.MavenActionUtil;
 
 /**
- *<p>
+ * <p>
  *
- *</p>
+ * </p>
  *
  * @author liuyang
  * @date 2020/2/6 周四 23:48:00
  * @since 1.0.0
  */
 public abstract class AbstractPomAction extends AnAction {
+    @Override
+    public @NotNull ActionUpdateThread getActionUpdateThread() {
+        return ActionUpdateThread.EDT;
+    }
 
     @Override
     public void update(@NotNull AnActionEvent e) {
