@@ -23,7 +23,7 @@ import org.jetbrains.idea.maven.utils.actions.MavenActionUtil;
 public abstract class AbstractPomAction extends AnAction {
     @Override
     public @NotNull ActionUpdateThread getActionUpdateThread() {
-        return ActionUpdateThread.EDT;
+        return ActionUpdateThread.BGT;
     }
 
     @Override

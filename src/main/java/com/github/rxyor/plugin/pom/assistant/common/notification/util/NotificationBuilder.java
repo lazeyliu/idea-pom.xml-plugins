@@ -1,16 +1,17 @@
 package com.github.rxyor.plugin.pom.assistant.common.notification.util;
 
 import com.intellij.notification.Notification;
-import com.intellij.notification.NotificationListener;
+import com.intellij.notification.NotificationAction;
 import com.intellij.notification.NotificationType;
-import javax.swing.Icon;
 import lombok.Getter;
 import lombok.ToString;
 
+import javax.swing.*;
+
 /**
- *<p>
+ * <p>
  *
- *</p>
+ * </p>
  *
  * @author liuyang
  * @date 2020/1/24 周五 17:20:00
@@ -26,7 +27,7 @@ public class NotificationBuilder {
     private String myTitle;
     private String mySubtitle;
     private String myContent;
-    private NotificationListener myListener;
+    private NotificationAction myAnAction;
 
     NotificationBuilder() {
     }
@@ -65,14 +66,21 @@ public class NotificationBuilder {
         return this;
     }
 
-    public NotificationBuilder myListener(NotificationListener myListener) {
-        this.myListener = myListener;
+
+    public NotificationBuilder myAnAction(NotificationAction myAnAction) {
+        this.myAnAction = myAnAction;
         return this;
     }
 
     public Notification build() {
-        return new Notification(this.myGroupId, this.myIcon, this.myTitle, this.mySubtitle,
-            this.myContent, this.myType, this.myListener);
+        Notification notification = new Notification(
+                this.myGroupId,
+                this.myContent,
+                this.myType);
+        return notification.setIcon(this.getMyIcon())
+                .setTitle(this.getMyTitle())
+                .setSubtitle(this.getMySubtitle())
+                .addAction(myAnAction);
     }
 
 }

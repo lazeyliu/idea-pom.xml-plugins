@@ -2,18 +2,19 @@ package com.github.rxyor.plugin.pom.assistant.common.jsoup.parse;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 import org.jetbrains.idea.maven.model.MavenId;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
 /**
- *<p>
+ * <p>
  *
- *</p>
+ * </p>
  *
  * @author liuyang
  * @date 2020/2/8 周六 21:07:00
@@ -87,10 +88,10 @@ public class DependsSearchHelper {
         }
 
         Document imSubtitleDoc = Jsoup.parse(document
-            .getElementsByClass("im-subtitle").html());
+                .getElementsByClass("im-subtitle").html());
         String text = imSubtitleDoc.getElementsByAttribute("href").text();
         List<String> groupIdAndArtifactIdList = Splitter.on(" ").omitEmptyStrings()
-            .trimResults().splitToList(text);
+                .trimResults().splitToList(text);
 
         final int len = groupIdAndArtifactIdList.size();
         List<MavenId> mavenIdList = new ArrayList<>(len / 2);
@@ -107,7 +108,9 @@ public class DependsSearchHelper {
 
     private Document connect(String url) {
         try {
-            return Jsoup.connect(url).get();
+            return Jsoup.connect(url)
+                    .userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 Edg/123.0.0.0")
+                    .get();
         } catch (Exception e) {
             throw new RuntimeException("request url:[" + url + "] fail, error:" + e.getMessage(), e);
         }

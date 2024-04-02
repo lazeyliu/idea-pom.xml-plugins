@@ -13,22 +13,6 @@ import com.google.common.base.Splitter;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.psi.PsiFile;
-import java.awt.event.AdjustmentEvent;
-import java.awt.event.ItemEvent;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
-import javax.swing.DefaultListModel;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JList;
-import javax.swing.JPanel;
-import javax.swing.JScrollBar;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
 import org.apache.commons.lang3.StringUtils;
 import org.jdesktop.swingx.combobox.ListComboBoxModel;
 import org.jetbrains.annotations.NotNull;
@@ -36,13 +20,23 @@ import org.jetbrains.idea.maven.dom.model.MavenDomDependencies;
 import org.jetbrains.idea.maven.dom.model.MavenDomProjectModel;
 import org.jetbrains.idea.maven.model.MavenId;
 
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.ItemEvent;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
+
 /**
- *<p>
+ * <p>
  *
- *</p>
+ * </p>
  *
  * @author liuyang
- * @date 2020/2/8 周六 12:55:00
+ * @since 2020/2/8 周六 12:55:00
  * @since 1.0.0
  */
 public class SearchDependencyDialog extends BaseDialog {
@@ -61,7 +55,7 @@ public class SearchDependencyDialog extends BaseDialog {
     private JButton addBtn;
     private JButton updateBtn;
 
-    private DefaultListModel<String> listModel = new DefaultListModel();
+    private DefaultListModel<String> listModel = new DefaultListModel<>();
     private DependsSearchHelper searcher = null;
     private MavenId clickMavenId = null;
 
@@ -103,30 +97,16 @@ public class SearchDependencyDialog extends BaseDialog {
      */
     private void initViewBindListener() {
         //搜索按钮点击事件
-        searchBtn.addActionListener(e -> {
-            THREAD_POOL.submit(() -> doSearch());
-        });
+        searchBtn.addActionListener(e -> THREAD_POOL.submit(() -> this.doSearch(e)));
 
         //滑条到底事件
-        scrollBar.addAdjustmentListener(e -> {
-            THREAD_POOL.submit(() -> {
-                handleScrollBottomEvent(e);
-            });
-        });
+        scrollBar.addAdjustmentListener(e -> THREAD_POOL.submit(() -> this.handleScrollBottomEvent(e)));
 
         //点击搜索列表事件
-        searchRetList.addListSelectionListener(e -> {
-            THREAD_POOL.submit(() -> {
-                handleClickSearchItemEvent();
-            });
-        });
+        searchRetList.addListSelectionListener(e -> THREAD_POOL.submit(this::handleClickSearchItemEvent));
 
         //版本选择框选中改变事件
-        versionBox.addItemListener(e -> {
-            THREAD_POOL.submit(() -> {
-                handleSelectVersionEvent(e);
-            });
-        });
+        versionBox.addItemListener(e -> THREAD_POOL.submit(() -> handleSelectVersionEvent(e)));
 
         //复制按钮选择事件
         copyBtn.addActionListener(e -> {
@@ -138,20 +118,14 @@ public class SearchDependencyDialog extends BaseDialog {
         });
 
         //添加按钮选择事件
-        addBtn.addActionListener(e -> {
-            addDependency(clickMavenId);
-        });
+        addBtn.addActionListener(e -> this.addDependency(clickMavenId));
 
         //更新按钮选择事件
-        updateBtn.addActionListener(e -> {
-            updateDependency(clickMavenId);
-        });
+        updateBtn.addActionListener(e -> this.updateDependency(clickMavenId));
     }
 
     /**
      * 处理列表滑动底部事件
-     *
-     * @param e
      */
     private void handleScrollBottomEvent(AdjustmentEvent e) {
         int curH = e.getValue();
@@ -175,11 +149,16 @@ public class SearchDependencyDialog extends BaseDialog {
         }
 
         //查询点击的依赖的所有版本号
-        List<String> versions = searchAndAddToVersionComboBoxUI(clickMavenId.getGroupId(),
-            clickMavenId.getArtifactId());
+        List<String> versions = this.searchAndAddToVersionComboBoxUI(
+                clickMavenId.getGroupId(),
+                clickMavenId.getArtifactId()
+        );
         if (!versions.isEmpty()) {
             clickMavenId = new MavenId(
-                clickMavenId.getGroupId(), clickMavenId.getArtifactId(), versions.get(0));
+                    clickMavenId.getGroupId(),
+                    clickMavenId.getArtifactId(),
+                    versions.get(0)
+            );
             //填充到展示面板里
             setToDependDetail(clickMavenId);
         } else {
@@ -189,27 +168,27 @@ public class SearchDependencyDialog extends BaseDialog {
 
     /**
      * 处理选择版本事件
-     *
-     * @param e
      */
     private void handleSelectVersionEvent(ItemEvent e) {
         if (ItemEvent.SELECTED == e.getStateChange()) {
             clickMavenId = new MavenId(
-                clickMavenId.getGroupId(), clickMavenId.getArtifactId(), e.getItem().toString());
+                    clickMavenId.getGroupId(),
+                    clickMavenId.getArtifactId(),
+                    e.getItem().toString()
+            );
             setToDependDetail(clickMavenId);
         }
     }
 
     /**
-     *发起网络请求搜索依赖列表
+     * 发起网络请求搜索依赖列表
      *
      * @author liuyang
-     * @date 2020-02-09 周日 15:08:32
-     * @return
+     * @since 2020-02-09 周日 15:08:32
      */
-    private void doSearch() {
-        MavenId mavenId = parseMavenId(keywordTxt.getText());
-        Page page;
+    private void doSearch(ActionEvent e) {
+        MavenId mavenId = this.parseMavenId(keywordTxt.getText());
+        Page<MavenId> page;
         //如果是com.alibaba:fastjson这种唯一标识的关键字，不用模糊搜索
         if (mavenId != null) {
             List<MavenId> list = new ArrayList<>(1);
@@ -225,11 +204,10 @@ public class SearchDependencyDialog extends BaseDialog {
     }
 
     /**
-     *发起网络请求搜索下一页
+     * 发起网络请求搜索下一页
      *
      * @author liuyang
-     * @date 2020-02-09 周日 15:17:38
-     * @return
+     * @since 2020-02-09 周日 15:17:38
      */
     private void nextPage() {
         if (searcher == null) {
@@ -239,21 +217,21 @@ public class SearchDependencyDialog extends BaseDialog {
     }
 
     /**
-     *将数据添加到搜索列表当中
+     * 将数据添加到搜索列表当中
      *
-     * @author liuyang
-     * @date 2020-02-09 周日 15:18:11
      * @param page page
-     * @return
+     * @author liuyang
+     * @since 2020-02-09 周日 15:18:11
      */
     private void addToSearchListUI(Page<MavenId> page) {
         if (page.getTotal() <= 0) {
             return;
         }
 
-        List<String> listData = page.getItems().stream().map(
-            mavenId -> mavenId.getGroupId() + ":" + mavenId.getArtifactId())
-            .collect(Collectors.toList());
+        List<String> listData = page.getItems()
+                .stream()
+                .map(mavenId -> mavenId.getGroupId() + ":" + mavenId.getArtifactId())
+                .toList();
 
         listData.forEach(s -> {
             if (!listModel.contains(s)) {
@@ -264,45 +242,39 @@ public class SearchDependencyDialog extends BaseDialog {
     }
 
     /**
-     *刷新搜索列表
+     * 刷新搜索列表
      *
      * @author liuyang
-     * @date 2020-02-09 周日 15:20:48
-     * @return
+     * @since 2020-02-09 周日 15:20:48
      */
     private void refreshSearchListUI() {
         searchRetList.setModel(listModel);
     }
 
     /**
-     *滑条是否接近底部了
+     * 滑条是否接近底部了
      *
-     * @author liuyang
-     * @date 2020-02-09 周日 15:21:41
-     * @param listH listH
-     * @param curH curH
+     * @param listH  listH
+     * @param curH   curH
      * @param barLen barLen
-     * @return
+     * @author liuyang
+     * @since 2020-02-09 周日 15:21:41
      */
     private boolean isCloseToBottom(int listH, int curH, int barLen) {
         if (listH == 0) {
             return true;
         }
         int dValue = listH / 5;
-        if (listH - (curH + barLen) <= dValue) {
-            return true;
-        }
-        return false;
+        return listH - (curH + barLen) <= dValue;
     }
 
     /**
-     *搜索特定的groupId,artifactId 并把版本号填充到下拉列表
+     * 搜索特定的groupId,artifactId 并把版本号填充到下拉列表
      *
-     * @author liuyang
-     * @date 2020-02-09 周日 15:22:23
-     * @param groupId groupId
+     * @param groupId    groupId
      * @param artifactId artifactId
-     * @return
+     * @author liuyang
+     * @since 2020-02-09 周日 15:22:23
      */
     private List<String> searchAndAddToVersionComboBoxUI(String groupId, String artifactId) {
         List<String> list = this.searchVersionList(groupId, artifactId);
@@ -312,21 +284,15 @@ public class SearchDependencyDialog extends BaseDialog {
 
     /**
      * 发起网络请求搜索搜索特定的groupId,artifactId的所有版本号
-     *
-     * @param groupId
-     * @param artifactId
-     * @return
      */
     private List<String> searchVersionList(String groupId, String artifactId) {
         List<MavenId> list = ListVersionHelper.list(groupId, artifactId);
         return list.stream().map(MavenId::getVersion).filter(StringUtils::isNotBlank)
-            .distinct().collect(Collectors.toList());
+                .distinct().collect(Collectors.toList());
     }
 
     /**
      * 刷新版本号下拉列表
-     *
-     * @param list
      */
     private void refreshVersionComboBoxUI(List<String> list) {
         if (list == null) {
@@ -338,8 +304,6 @@ public class SearchDependencyDialog extends BaseDialog {
 
     /**
      * 设置依赖面板的内容
-     *
-     * @param mavenId
      */
     private void setToDependDetail(MavenId mavenId) {
         if (mavenId == null) {
@@ -348,13 +312,18 @@ public class SearchDependencyDialog extends BaseDialog {
 
         StringBuilder sb = new StringBuilder("<dependency>\n");
         if (StringUtils.isNotBlank(mavenId.getGroupId())) {
-            sb.append("\t<groupId>" + mavenId.getGroupId() + "</groupId>\n");
+            sb.append("\t<groupId>")
+                    .append(mavenId.getGroupId())
+                    .append("</groupId>\n");
         }
         if (StringUtils.isNotBlank(mavenId.getArtifactId())) {
-            sb.append("\t<artifactId>" + mavenId.getArtifactId() + "</artifactId>\n");
+            sb.append("\t<artifactId>")
+                    .append(mavenId.getArtifactId()).append("</artifactId>\n");
         }
         if (StringUtils.isNotBlank(mavenId.getVersion())) {
-            sb.append("\t<version>" + mavenId.getVersion() + "</version>\n");
+            sb.append("\t<version>")
+                    .append(mavenId.getVersion())
+                    .append("</version>\n");
         }
         sb.append("</dependency>");
 
@@ -372,12 +341,12 @@ public class SearchDependencyDialog extends BaseDialog {
 
     /**
      * 解析字符串为MavenId
-     *
-     * @param s
-     * @return
      */
     private MavenId parseMavenId(String s) {
-        List<String> splitList = Splitter.on(":").omitEmptyStrings().trimResults().splitToList(s);
+        List<String> splitList = Splitter.on(":")
+                .omitEmptyStrings()
+                .trimResults()
+                .splitToList(s);
         if (splitList.size() < 2) {
             return null;
         }
@@ -396,27 +365,27 @@ public class SearchDependencyDialog extends BaseDialog {
 
         final PsiFile psiFile = PsiUtil.getPsiFile(e);
         final MavenDomProjectModel model = MavenProjectUtil
-            .getMavenDomProjectModel(psiFile);
+                .getMavenDomProjectModel(psiFile);
 
         DependencyPair dependencyPair = MavenDependencyUtil
-            .findDependency(model, mavenId);
+                .findDependency(model, mavenId);
         boolean exist = isExist(dependencyPair);
         if (exist) {
             NotificationUtil.warn("Warn", "Dependency is existed", project);
         } else {
-            WriteCommandAction.runWriteCommandAction(PsiUtil.getProject(e), () -> {
-                MavenDomDependencies domDependencies = model
-                    .getDependencyManagement().getDependencies();
-                MavenDependencyUtil.addDomDependency(domDependencies, mavenId);
-                PsiUtil.reformat(psiFile);
-            });
+            WriteCommandAction.runWriteCommandAction(
+                    PsiUtil.getProject(e),
+                    () -> {
+                        MavenDomDependencies domDependencies = model
+                                .getDependencyManagement().getDependencies();
+                        MavenDependencyUtil.addDomDependency(domDependencies, mavenId);
+                        PsiUtil.reformat(psiFile);
+                    });
         }
     }
 
     /**
      * 更新依赖
-     *
-     * @param mavenId
      */
     private void updateDependency(MavenId mavenId) {
         if (mavenId == null) {
@@ -425,10 +394,10 @@ public class SearchDependencyDialog extends BaseDialog {
 
         final PsiFile psiFile = PsiUtil.getPsiFile(e);
         final MavenDomProjectModel model = MavenProjectUtil
-            .getMavenDomProjectModel(psiFile);
+                .getMavenDomProjectModel(psiFile);
 
         DependencyPair dependencyPair = MavenDependencyUtil
-            .findDependency(model, mavenId);
+                .findDependency(model, mavenId);
         boolean exist = isExist(dependencyPair);
         WriteCommandAction.runWriteCommandAction(PsiUtil.getProject(e), () -> {
             if (exist) {
@@ -440,7 +409,7 @@ public class SearchDependencyDialog extends BaseDialog {
                 }
             } else {
                 MavenDomDependencies domDependencies = model
-                    .getDependencyManagement().getDependencies();
+                        .getDependencyManagement().getDependencies();
                 MavenDependencyUtil.addDomDependency(domDependencies, mavenId);
             }
             PsiUtil.reformat(psiFile);
@@ -449,6 +418,6 @@ public class SearchDependencyDialog extends BaseDialog {
 
     private boolean isExist(DependencyPair pair) {
         return pair != null &&
-            (pair.getManagementDependency() != null || pair.getDependency() != null);
+                (pair.getManagementDependency() != null || pair.getDependency() != null);
     }
 }

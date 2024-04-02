@@ -63,7 +63,7 @@
     </change-notes>
 
     <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Build+Number+Ranges for description -->
-    <idea-version since-build="241"/>
+    <idea-version since-build="222.3345" until-build="241.*" />
 
     <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
          on how to target different products -->
@@ -80,12 +80,6 @@
     </project-components>
 
     <actions>
-        <action id="ExtractVersionAction"
-                class="com.github.rxyor.plugin.pom.assistant.action.ExtractVersionAction"
-                text="Replace Version"
-                description="extract version and replace placeholder">
-            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
-        </action>
         <action id="SortAction"
                 class="com.github.rxyor.plugin.pom.assistant.action.SortAction"
                 text="Sort"
@@ -98,26 +92,33 @@
                 description="sort pom tag by comment group">
             <add-to-group group-id="ProjectViewPopupMenu"/>
         </action>
-        <action id="SearchAction"
-                class="com.github.rxyor.plugin.pom.assistant.action.SearchAction"
-                text="Search"
-                description="sort pom tag by comment group">
-            <add-to-group group-id="ProjectViewPopupMenu"/>
+        <action id="ExtractVersionAction"
+                class="com.github.rxyor.plugin.pom.assistant.action.ExtractVersionAction"
+                text="Replace Version"
+                description="extract version and replace placeholder">
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
         </action>
+<!--        <action id="SearchAction"-->
+<!--                class="com.github.rxyor.plugin.pom.assistant.action.SearchAction"-->
+<!--                text="Search"-->
+<!--                description="sort pom tag by comment group">-->
+<!--            <add-to-group group-id="ProjectViewPopupMenu"/>-->
+<!--        </action>-->
 
         <group id="PomAssistant"
                text="Pom Assistant"
                popup="true"
-               icon="Icons.mavenLogo"
+               icon="/icons/maven.svg"
         >
             <add-to-group group-id="EditorPopupMenu"
                           anchor="after"
-                          relative-to-action="CopyReference"/>
-            <add-to-group group-id="ToolsMenu" anchor="first"/>
+                          relative-to-action="ShowIntentionsGroup"/>
+
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
             <reference ref="ExtractVersionAction"/>
             <reference ref="SortAction"/>
             <reference ref="GroupSortAction"/>
-            <reference ref="SearchAction"/>
+<!--            <reference ref="SearchAction"/>-->
         </group>
     </actions>
 

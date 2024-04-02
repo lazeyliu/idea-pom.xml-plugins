@@ -1,15 +1,16 @@
 package com.github.rxyor.plugin.pom.assistant.common.dom.model;
 
 import com.github.rxyor.plugin.pom.assistant.common.constant.PluginConst.PomTag;
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import org.apache.commons.lang3.StringUtils;
 
 /**
- *<p>
+ * <p>
  *
- *</p>
+ * </p>
  *
  * @author liuyang
  * @date 2020/2/4 周二 23:24:00
@@ -51,6 +52,9 @@ public class SortOrderConfig {
         properties.put("java.version", i++);
         properties.put("java.encoding", i++);
         properties.put("project.encoding", i++);
+        properties.put("project.build.sourceEncoding", i++);
+        properties.put("project.reporting.outputEncoding", i++);
+
         properties.put("app.name", i++);
         properties.put("timestamp", i++);
         properties.put("maven.test.skip", i++);
@@ -78,7 +82,7 @@ public class SortOrderConfig {
             return new HashMap<>(0);
         }
         Map<String, Integer> config = Optional.ofNullable(TAG_ORDER_CONFIG.get(tag))
-            .orElse(TAG_ORDER_CONFIG.get(PomTag.PROJECT));
+                .orElse(TAG_ORDER_CONFIG.get(PomTag.PROJECT));
         return Optional.ofNullable(config).orElse(new HashMap<>(0));
     }
 }
