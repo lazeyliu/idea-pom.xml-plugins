@@ -13,12 +13,8 @@ import org.jetbrains.idea.maven.model.MavenId;
 import java.awt.*;
 
 /**
- * <p>
- *
- * </p>
- *
  * @author liuyang
- * @date 2020/2/8 周六 14:31:00
+ * @since 2020/2/8 周六 14:31:00
  * @since 1.0.0
  */
 public class SearchAction extends AbstractPomAction {
@@ -26,16 +22,16 @@ public class SearchAction extends AbstractPomAction {
     private final static String DIALOG_TITLE = "Search Maven Dependency";
 
     @Override
-    public @NotNull ActionUpdateThread getActionUpdateThread() {
-        return ActionUpdateThread.BGT;
-    }
-
-    @Override
     public void actionPerformed(@NotNull AnActionEvent e) {
         MavenId clickMavenId = getClickMavenId(e);
         SearchDependencyDialog dialog = new SearchDependencyDialog(e, clickMavenId);
         dialog.popup(DIALOG_TITLE, new Dimension(600, 350),
                 new Dimension(800, 600));
+    }
+
+    @Override
+    public @NotNull ActionUpdateThread getActionUpdateThread() {
+        return ActionUpdateThread.BGT;
     }
 
     /**

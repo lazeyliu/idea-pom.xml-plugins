@@ -2,19 +2,18 @@ package com.github.rxyor.plugin.pom.assistant.common.dom.processor;
 
 import com.github.rxyor.plugin.pom.assistant.common.constant.PluginConst.PomTag;
 import com.github.rxyor.plugin.pom.assistant.common.dom.model.SortOrderConfig;
+import org.dom4j.Element;
+
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.dom4j.Element;
 
 /**
- *<p>
  * 排序比较器
- *</p>
  *
  * @author liuyang
- * @date 2020-02-06 周四 00:29:34
+ * @since 2020-02-06 周四 00:29:34
  * @since 1.0.0
  */
 public class SortComparator implements Comparator<Element> {
@@ -42,23 +41,7 @@ public class SortComparator implements Comparator<Element> {
         }
 
         int ret3 = compareByName(o1, o2);
-        if (ret3 != 0) {
-            return ret3;
-        }
-
-        return 0;
-    }
-
-    private CompareRet compareObject(Object o1, Object o2) {
-        if (o1 == null && o2 == null) {
-            return CompareRet.NULL;
-        } else if (o1 == null && o2 != null) {
-            return CompareRet.LARGE;
-        } else if (o1 != null && o2 == null) {
-            return CompareRet.SMALL;
-        } else {
-            return CompareRet.NONNULL;
-        }
+        return ret3;
     }
 
     private int compareByConfig(Element o1, Element o2) {
@@ -76,7 +59,7 @@ public class SortComparator implements Comparator<Element> {
 
         int ret;
         if (Boolean.TRUE.equals(COMPARE_VALUE_TAG_MAP.get(o1.getName()))
-            && Boolean.TRUE.equals(COMPARE_VALUE_TAG_MAP.get(o2.getName()))) {
+                && Boolean.TRUE.equals(COMPARE_VALUE_TAG_MAP.get(o2.getName()))) {
             ret = o1.getText().compareTo(o2.getText());
         } else {
             ret = o1.getName().compareTo(o2.getName());
@@ -87,16 +70,21 @@ public class SortComparator implements Comparator<Element> {
         } else {
             //递归比较，直到比较出结果
             return compareByName(getElementFirst(o1.elements()),
-                getElementFirst(o2.elements()));
+                    getElementFirst(o2.elements()));
         }
 
     }
 
-    private Element getElementFirst(List<Element> list) {
-        if (list == null || list.isEmpty()) {
-            return null;
+    private CompareRet compareObject(Object o1, Object o2) {
+        if (o1 == null && o2 == null) {
+            return CompareRet.NULL;
+        } else if (o1 == null && o2 != null) {
+            return CompareRet.LARGE;
+        } else if (o1 != null && o2 == null) {
+            return CompareRet.SMALL;
+        } else {
+            return CompareRet.NONNULL;
         }
-        return list.get(0);
     }
 
     private int enumToInt(CompareRet ret) {
@@ -108,6 +96,13 @@ public class SortComparator implements Comparator<Element> {
             default:
                 return 0;
         }
+    }
+
+    private Element getElementFirst(List<Element> list) {
+        if (list == null || list.isEmpty()) {
+            return null;
+        }
+        return list.get(0);
     }
 
     public enum CompareRet {

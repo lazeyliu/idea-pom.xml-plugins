@@ -12,15 +12,22 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.idea.maven.utils.actions.MavenActionUtil;
 
 /**
- * <p>
- *
- * </p>
- *
  * @author liuyang
- * @date 2020/2/6 周四 23:48:00
+ * @since 2020/2/6 周四 23:48:00
  * @since 1.0.0
  */
 public abstract class AbstractPomAction extends AnAction {
+    /**
+     * 检查点击文件是否有效的maven工程文件
+     */
+    protected boolean checkMavenProjectFile(PsiFile psiFile) {
+        if (!MavenActionUtil.isMavenProjectFile(psiFile.getVirtualFile())) {
+            NotificationUtil.warn("Warn", "Click file is not valid maven project file");
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public @NotNull ActionUpdateThread getActionUpdateThread() {
         return ActionUpdateThread.BGT;
@@ -36,19 +43,5 @@ public abstract class AbstractPomAction extends AnAction {
         } else {
             presentation.setVisible(false);
         }
-    }
-
-    /**
-     * 检查点击文件是否有效的maven工程文件
-     *
-     * @param psiFile
-     * @return
-     */
-    protected boolean checkMavenProjectFile(PsiFile psiFile) {
-        if (!MavenActionUtil.isMavenProjectFile(psiFile.getVirtualFile())) {
-            NotificationUtil.warn("Warn", "Click file is not valid maven project file");
-            return true;
-        }
-        return false;
     }
 }

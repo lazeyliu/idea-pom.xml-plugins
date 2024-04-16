@@ -1,17 +1,18 @@
 package com.github.rxyor.plugin.pom.assistant.common.clipboard;
 
-import java.awt.Toolkit;
+import lombok.extern.slf4j.Slf4j;
+
+import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 剪切板工具类
  *
  * @author 汪小哥
- * @date 20-11-2019
+ * @since 20-11-2019
  */
 @Slf4j
 public class ClipboardUtil {

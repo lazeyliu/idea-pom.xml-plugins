@@ -1,16 +1,13 @@
 package com.github.rxyor.plugin.pom.assistant.common.dom.model;
 
 import com.github.rxyor.plugin.pom.assistant.common.constant.PluginConst.PomTag;
+
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- *<p>
- *
- *</p>
- *
  * @author liuyang
- * @date 2020/2/4 周二 23:24:00
+ * @since 2020/2/4 周二 23:24:00
  * @since 1.0.0
  */
 public class FormatConfig {
@@ -63,12 +60,12 @@ public class FormatConfig {
         PATH_CONFIG.put(sb.toString(), NEWLINE);
     }
 
-    public String getNewlineByTag(String tag) {
-        return TAG_CONFIG.get(tag);
-    }
-
     public String getNewlineByPath(String tag) {
         return PATH_CONFIG.get(tag);
+    }
+
+    public String getNewlineByTag(String tag) {
+        return TAG_CONFIG.get(tag);
     }
 
 }

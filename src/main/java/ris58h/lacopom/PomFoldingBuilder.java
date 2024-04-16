@@ -18,148 +18,23 @@ import com.intellij.xml.util.XmlTagUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.idea.maven.dom.MavenDomUtil;
-import org.jetbrains.idea.maven.dom.model.MavenDomDependency;
-import org.jetbrains.idea.maven.dom.model.MavenDomExclusion;
-import org.jetbrains.idea.maven.dom.model.MavenDomExtension;
-import org.jetbrains.idea.maven.dom.model.MavenDomParent;
-import org.jetbrains.idea.maven.dom.model.MavenDomPlugin;
-import org.jetbrains.idea.maven.dom.model.MavenDomPluginExecution;
-import org.jetbrains.idea.maven.dom.model.MavenDomProfile;
-import org.jetbrains.idea.maven.dom.model.MavenDomProjectModel;
-import org.jetbrains.idea.maven.dom.model.MavenDomShortArtifactCoordinates;
+import org.jetbrains.idea.maven.dom.model.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Set;
 
 public class PomFoldingBuilder extends FoldingBuilderEx {
     private static final FoldingDescriptor[] EMPTY_FOLDING_DESCRIPTOR_ARRAY = new FoldingDescriptor[0];
     private static final char PART_SEPARATOR = ':';
     private static final String MORE_ENDING = " ...";
+    //TODO: it's a copypaste from com.intellij.lang.XmlCodeFoldingBuilder
+    private static final TokenSet XML_ATTRIBUTE_SET = TokenSet.create(XmlElementType.XML_ATTRIBUTE);
 
-    @NotNull
-    @Override
-    public FoldingDescriptor @NotNull [] buildFoldRegions(@NotNull PsiElement root, @NotNull Document document, boolean quick) {
-        if (!(root instanceof XmlFile)) {
-            return EMPTY_FOLDING_DESCRIPTOR_ARRAY;
+    private static void appendPartIfNotNull(StringBuilder sb, String s) {
+        if (s != null) {
+            sb.append(PART_SEPARATOR).append(s);
         }
-
-        MavenDomProjectModel projectModel = MavenDomUtil.getMavenDomModel(((XmlFile) root), MavenDomProjectModel.class);
-        if (projectModel == null) {
-            return EMPTY_FOLDING_DESCRIPTOR_ARRAY;
-        }
-
-        Collection<FoldingDescriptor> descriptors = descriptors(projectModel);
-
-        return descriptors.isEmpty() ? EMPTY_FOLDING_DESCRIPTOR_ARRAY
-                : descriptors.toArray(new FoldingDescriptor[descriptors.size()]);
-    }
-
-    @Nullable
-    @Override
-    public String getPlaceholderText(@NotNull ASTNode node) {
-        return null;
-    }
-
-    @Override
-    public boolean isCollapsedByDefault(@NotNull ASTNode node) {
-        return true;
-    }
-
-    @Nullable
-    private static FoldingDescriptor foldingDescriptor(XmlTag xmlTag, String placeholder) {
-        if (placeholder == null) {
-            return null;
-        }
-        TextRange rangeToFold = getRangeToFold(xmlTag);
-        if (rangeToFold == null) {
-            return null;
-        }
-        return new FoldingDescriptor(
-                xmlTag,
-                rangeToFold.getStartOffset(),
-                rangeToFold.getEndOffset(),
-                null,
-                " " + placeholder);
-    }
-
-    private static Collection<FoldingDescriptor> descriptors(MavenDomProjectModel projectModel) {
-        Collection<FoldingDescriptor> descriptors = new ArrayList<>();
-        new MavenDomProcessor() {
-            private void addDescriptorIfPossible(XmlTag xmlTag, String placeholder) {
-                FoldingDescriptor foldingDescriptor = foldingDescriptor(xmlTag, placeholder);
-                if (foldingDescriptor != null) {
-                    descriptors.add(foldingDescriptor);
-                }
-            }
-
-            @Override
-            protected void onParent(MavenDomParent parent) {
-                addDescriptorIfPossible(parent.getXmlTag(), describeParent(parent));
-            }
-
-            @Override
-            protected void onProfile(MavenDomProfile profile) {
-                addDescriptorIfPossible(profile.getXmlTag(), describeProfile(profile));
-            }
-
-            @Override
-            protected void onExtension(MavenDomExtension extension) {
-                addDescriptorIfPossible(extension.getXmlTag(), describeExtension(extension));
-            }
-
-            @Override
-            protected void onDependency(MavenDomDependency dependency) {
-                addDescriptorIfPossible(dependency.getXmlTag(), describeDependency(dependency));
-            }
-
-            @Override
-            protected void onExclusion(MavenDomExclusion exclusion) {
-                addDescriptorIfPossible(exclusion.getXmlTag(), describeExclusion(exclusion));
-            }
-
-            @Override
-            protected void onPlugin(MavenDomPlugin plugin) {
-                addDescriptorIfPossible(plugin.getXmlTag(), describePlugin(plugin));
-            }
-
-            @Override
-            protected void onExecution(MavenDomPluginExecution execution) {
-                addDescriptorIfPossible(execution.getXmlTag(), describeExecution(execution));
-            }
-        }.process(projectModel);
-        return descriptors;
-    }
-
-    private static boolean hasId(MavenDomShortArtifactCoordinates artifactCoordinates) {
-        String groupId = artifactCoordinates.getGroupId().getStringValue();
-        String artifactId = artifactCoordinates.getArtifactId().getStringValue();
-        return groupId != null && artifactId != null;
-    }
-
-    private static String describeParent(MavenDomParent parent) {
-        if (!hasId(parent)) {
-            return null;
-        }
-        String version = parent.getVersion().getStringValue();
-        if (version == null) {
-            return null;
-        }
-        StringBuilder sb = new StringBuilder();
-        sb.append(parent.getGroupId().getStringValue());
-        appendPartIfNotNull(sb, parent.getArtifactId().getStringValue());
-        appendPartIfNotNull(sb, version);
-        if (parent.getRelativePath().exists()) {
-            sb.append(MORE_ENDING);
-        }
-        return sb.toString();
-    }
-
-    private static String describeProfile(MavenDomProfile profile) {
-        String id = profile.getId().getStringValue();
-        if (id == null) {
-            return null;
-        }
-        boolean hasMore = hasSubTagsExcept(profile, Set.of("id"));
-        return hasMore ? id + MORE_ENDING : id;
     }
 
     private static String describeDependency(MavenDomDependency dependency) {
@@ -189,6 +64,49 @@ public class PomFoldingBuilder extends FoldingBuilderEx {
         return sb.toString();
     }
 
+    private static String describeExecution(MavenDomPluginExecution execution) {
+        String id = execution.getId().getStringValue();
+        if (id == null) {
+            return null;
+        }
+        boolean hasMore = hasSubTagsExcept(execution, Set.of("id"));
+        return hasMore ? id + MORE_ENDING : id;
+    }
+
+    private static String describeExtension(MavenDomExtension extension) {
+        String artifactId = extension.getArtifactId().getStringValue();
+        if (artifactId == null) {
+            return null;
+        }
+        String groupId = extension.getGroupId().getStringValue();
+        StringBuilder sb = new StringBuilder();
+        if (groupId == null) {
+            sb.append(artifactId);
+        } else {
+            sb.append(groupId).append(PART_SEPARATOR).append(artifactId);
+        }
+        appendPartIfNotNull(sb, extension.getVersion().getStringValue());
+        return sb.toString();
+    }
+
+    private static String describeParent(MavenDomParent parent) {
+        if (!hasId(parent)) {
+            return null;
+        }
+        String version = parent.getVersion().getStringValue();
+        if (version == null) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(parent.getGroupId().getStringValue());
+        appendPartIfNotNull(sb, parent.getArtifactId().getStringValue());
+        appendPartIfNotNull(sb, version);
+        if (parent.getRelativePath().exists()) {
+            sb.append(MORE_ENDING);
+        }
+        return sb.toString();
+    }
+
     private static String describePlugin(MavenDomPlugin plugin) {
         String artifactId = plugin.getArtifactId().getStringValue();
         if (artifactId == null) {
@@ -209,51 +127,79 @@ public class PomFoldingBuilder extends FoldingBuilderEx {
         return sb.toString();
     }
 
-    private static String describeExtension(MavenDomExtension extension) {
-        String artifactId = extension.getArtifactId().getStringValue();
-        if (artifactId == null) {
-            return null;
-        }
-        String groupId = extension.getGroupId().getStringValue();
-        StringBuilder sb = new StringBuilder();
-        if (groupId == null) {
-            sb.append(artifactId);
-        } else {
-            sb.append(groupId).append(PART_SEPARATOR).append(artifactId);
-        }
-        appendPartIfNotNull(sb, extension.getVersion().getStringValue());
-        return sb.toString();
-    }
-
-    private static String describeExecution(MavenDomPluginExecution execution) {
-        String id = execution.getId().getStringValue();
+    private static String describeProfile(MavenDomProfile profile) {
+        String id = profile.getId().getStringValue();
         if (id == null) {
             return null;
         }
-        boolean hasMore = hasSubTagsExcept(execution, Set.of("id"));
+        boolean hasMore = hasSubTagsExcept(profile, Set.of("id"));
         return hasMore ? id + MORE_ENDING : id;
     }
 
-    private static void appendPartIfNotNull(StringBuilder sb, String s) {
-        if (s != null) {
-            sb.append(PART_SEPARATOR).append(s);
-        }
-    }
-
-    private static boolean hasSubTagsExcept(DomElement element, Set<String> expectedTags) {
-        XmlTag xmlTag = element.getXmlTag();
-        if (xmlTag != null) {
-            for (XmlTag subTag : xmlTag.getSubTags()) {
-                if (!expectedTags.contains(subTag.getLocalName())) {
-                    return true;
+    private static Collection<FoldingDescriptor> descriptors(MavenDomProjectModel projectModel) {
+        Collection<FoldingDescriptor> descriptors = new ArrayList<>();
+        new MavenDomProcessor() {
+            private void addDescriptorIfPossible(XmlTag xmlTag, String placeholder) {
+                FoldingDescriptor foldingDescriptor = foldingDescriptor(xmlTag, placeholder);
+                if (foldingDescriptor != null) {
+                    descriptors.add(foldingDescriptor);
                 }
             }
-        }
-        return false;
+
+            @Override
+            protected void onDependency(MavenDomDependency dependency) {
+                addDescriptorIfPossible(dependency.getXmlTag(), describeDependency(dependency));
+            }
+
+            @Override
+            protected void onExclusion(MavenDomExclusion exclusion) {
+                addDescriptorIfPossible(exclusion.getXmlTag(), describeExclusion(exclusion));
+            }
+
+            @Override
+            protected void onExecution(MavenDomPluginExecution execution) {
+                addDescriptorIfPossible(execution.getXmlTag(), describeExecution(execution));
+            }
+
+            @Override
+            protected void onExtension(MavenDomExtension extension) {
+                addDescriptorIfPossible(extension.getXmlTag(), describeExtension(extension));
+            }
+
+            @Override
+            protected void onParent(MavenDomParent parent) {
+                addDescriptorIfPossible(parent.getXmlTag(), describeParent(parent));
+            }
+
+            @Override
+            protected void onPlugin(MavenDomPlugin plugin) {
+                addDescriptorIfPossible(plugin.getXmlTag(), describePlugin(plugin));
+            }
+
+            @Override
+            protected void onProfile(MavenDomProfile profile) {
+                addDescriptorIfPossible(profile.getXmlTag(), describeProfile(profile));
+            }
+        }.process(projectModel);
+        return descriptors;
     }
 
-    //TODO: it's a copypaste from com.intellij.lang.XmlCodeFoldingBuilder
-    private static final TokenSet XML_ATTRIBUTE_SET = TokenSet.create(XmlElementType.XML_ATTRIBUTE);
+    @Nullable
+    private static FoldingDescriptor foldingDescriptor(XmlTag xmlTag, String placeholder) {
+        if (placeholder == null) {
+            return null;
+        }
+        TextRange rangeToFold = getRangeToFold(xmlTag);
+        if (rangeToFold == null) {
+            return null;
+        }
+        return new FoldingDescriptor(
+                xmlTag,
+                rangeToFold.getStartOffset(),
+                rangeToFold.getEndOffset(),
+                null,
+                " " + placeholder);
+    }
 
     @Nullable
     private static TextRange getRangeToFold(XmlTag xmlTag) {
@@ -283,5 +229,52 @@ public class PomFoldingBuilder extends FoldingBuilderEx {
         }
         int nameEnd = tagNameElement.getTextRange().getEndOffset();
         return new UnfairTextRange(nameEnd, end);
+    }
+
+    private static boolean hasId(MavenDomShortArtifactCoordinates artifactCoordinates) {
+        String groupId = artifactCoordinates.getGroupId().getStringValue();
+        String artifactId = artifactCoordinates.getArtifactId().getStringValue();
+        return groupId != null && artifactId != null;
+    }
+
+    private static boolean hasSubTagsExcept(DomElement element, Set<String> expectedTags) {
+        XmlTag xmlTag = element.getXmlTag();
+        if (xmlTag != null) {
+            for (XmlTag subTag : xmlTag.getSubTags()) {
+                if (!expectedTags.contains(subTag.getLocalName())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    @NotNull
+    @Override
+    public FoldingDescriptor @NotNull [] buildFoldRegions(@NotNull PsiElement root, @NotNull Document document, boolean quick) {
+        if (!(root instanceof XmlFile)) {
+            return EMPTY_FOLDING_DESCRIPTOR_ARRAY;
+        }
+
+        MavenDomProjectModel projectModel = MavenDomUtil.getMavenDomModel(((XmlFile) root), MavenDomProjectModel.class);
+        if (projectModel == null) {
+            return EMPTY_FOLDING_DESCRIPTOR_ARRAY;
+        }
+
+        Collection<FoldingDescriptor> descriptors = descriptors(projectModel);
+
+        return descriptors.isEmpty() ? EMPTY_FOLDING_DESCRIPTOR_ARRAY
+                : descriptors.toArray(new FoldingDescriptor[descriptors.size()]);
+    }
+
+    @Override
+    public boolean isCollapsedByDefault(@NotNull ASTNode node) {
+        return true;
+    }
+
+    @Nullable
+    @Override
+    public String getPlaceholderText(@NotNull ASTNode node) {
+        return null;
     }
 }

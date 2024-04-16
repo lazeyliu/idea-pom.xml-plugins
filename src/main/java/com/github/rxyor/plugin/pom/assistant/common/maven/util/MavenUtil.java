@@ -1,15 +1,15 @@
 package com.github.rxyor.plugin.pom.assistant.common.maven.util;
 
-import static com.github.rxyor.plugin.pom.assistant.common.maven.util.MavenDependencyUtil.findDependencyTag;
-import static com.github.rxyor.plugin.pom.assistant.common.maven.util.MavenPluginUtil.findPluginTag;
-
 import com.intellij.psi.PsiElement;
 import org.jetbrains.annotations.NotNull;
 
+import static com.github.rxyor.plugin.pom.assistant.common.maven.util.MavenDependencyUtil.findDependencyTag;
+import static com.github.rxyor.plugin.pom.assistant.common.maven.util.MavenPluginUtil.findPluginTag;
+
 /**
- *<p>
+ * <p>
  *
- *</p>
+ * </p>
  *
  * @author liuyang
  * @date 2020/2/8 周六 00:40:00
@@ -21,10 +21,7 @@ public class MavenUtil {
     }
 
     /**
-     *寻找点击的标签的父标签类型
-     *
-     * @param element
-     * @return
+     * 寻找点击的标签的父标签类型
      */
     public static TagType findClickParentTagType(@NotNull PsiElement element) {
         if (findDependencyTag(element) != null) {

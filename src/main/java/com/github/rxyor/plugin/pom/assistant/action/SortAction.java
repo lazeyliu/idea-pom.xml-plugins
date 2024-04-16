@@ -18,27 +18,23 @@ import com.intellij.psi.xml.XmlFile;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * <p>
- *
- * </p>
- *
  * @author liuyang
- * @date 2020/2/4 周二 14:47:00
+ * @since 2020/2/4 周二 14:47:00
  * @since 1.0.0
  */
 public class SortAction extends AbstractPomAction {
     @Override
-    public @NotNull ActionUpdateThread getActionUpdateThread() {
-        return ActionUpdateThread.BGT;
-    }
-
-    @Override
     public void actionPerformed(@NotNull AnActionEvent e) {
         CommandProcessor.getInstance().executeCommand(e.getProject(),
-                (Runnable) () -> {
+                () -> {
                     sort(e);
                 }
                 , App.GROUP_ID, App.GROUP_ID);
+    }
+
+    @Override
+    public @NotNull ActionUpdateThread getActionUpdateThread() {
+        return ActionUpdateThread.BGT;
     }
 
     private void sort(AnActionEvent e) {

@@ -1,12 +1,8 @@
 package com.github.rxyor.plugin.pom.assistant.common.constant;
 
 /**
- *<p>
- *
- *</p>
- *
  * @author liuyang
- * @date 2020/2/2 周日 21:53:00
+ * @since 2020/2/2 周日 21:53:00
  * @since 1.0.0
  */
 public interface ValidConst {

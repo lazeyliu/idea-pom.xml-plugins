@@ -8,12 +8,8 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * <p>
- *
- * </p>
- *
  * @author liuyang
- * @date 2020/2/4 周二 23:24:00
+ * @since 2020/2/4 周二 23:24:00
  * @since 1.0.0
  */
 public class SortOrderConfig {

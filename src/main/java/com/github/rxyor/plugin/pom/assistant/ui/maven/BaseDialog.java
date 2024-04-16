@@ -4,15 +4,16 @@ import com.github.rxyor.plugin.pom.assistant.common.psi.util.PsiUtil;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.WindowManager;
-import java.awt.Dimension;
-import javax.swing.JDialog;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
+import javax.swing.*;
+import java.awt.*;
+
 /**
- *<p>
+ * <p>
  *
- *</p>
+ * </p>
  *
  * @author liuyang
  * @date 2020/2/8 周六 15:39:00
@@ -28,15 +29,21 @@ public abstract class BaseDialog extends JDialog {
         this.project = PsiUtil.getProject(e);
     }
 
+    public void close() {
+        super.dispose();
+    }
+
+    protected abstract void createUIComponents();
+
     /**
-     *弹出Dialog
+     * 弹出Dialog
      *
-     * @author liuyang
-     * @date 2020-02-08 周六 15:58:27
-     * @param title title
+     * @param title   title
      * @param minSize minSize
      * @param maxSize maxSize
      * @return
+     * @author liuyang
+     * @date 2020-02-08 周六 15:58:27
      */
     public void popup(String title, Dimension minSize, Dimension maxSize) {
         if (StringUtils.isNotBlank(title)) {
@@ -55,11 +62,4 @@ public abstract class BaseDialog extends JDialog {
         super.setLocationRelativeTo(WindowManager.getInstance().getFrame(project));
         super.setVisible(true);
     }
-
-
-    public void close() {
-        super.dispose();
-    }
-
-    protected abstract void createUIComponents();
 }

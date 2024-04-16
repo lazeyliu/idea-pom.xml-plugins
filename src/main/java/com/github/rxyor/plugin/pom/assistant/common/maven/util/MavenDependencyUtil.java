@@ -12,9 +12,6 @@ import com.intellij.psi.xml.XmlElement;
 import com.intellij.psi.xml.XmlTag;
 import com.intellij.psi.xml.XmlText;
 import com.intellij.psi.xml.XmlToken;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,13 +21,17 @@ import org.jetbrains.idea.maven.dom.model.MavenDomDependencyManagement;
 import org.jetbrains.idea.maven.dom.model.MavenDomProjectModel;
 import org.jetbrains.idea.maven.model.MavenId;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
- *<p>
- *Copy from MavenDomUtil
- *</p>
+ * <p>
+ * Copy from MavenDomUtil
+ * </p>
  *
  * @author liuyang
- * @date 2020/2/3 周一 00:48:00
+ * @since 2020/2/3 周一 00:48:00
  * @since 1.0.0
  */
 public class MavenDependencyUtil {
@@ -39,104 +40,68 @@ public class MavenDependencyUtil {
     }
 
     /**
-     * get dependency from <dependencies> or <dependencyManagement> where click
+     * 添加依赖
      *
      * @author liuyang
-     * @date 2020-02-03 周一 14:44:39
-     * @param model
-     * @param editor
-     * @return
+     * @since 2020-02-09 周日 17:12:35
      */
-    public static MavenDomDependency getClickDependency(
-        @NotNull MavenDomProjectModel model, @Nullable Editor editor) {
-        MavenDomDependency dependency = getClickMavenDomDependency(model, editor);
-        if (dependency == null) {
-            return getClickDomManagementDependency(model, editor);
+    public static MavenDomDependency addDomDependency(
+            @NotNull MavenDomDependencyManagement management,
+            MavenId mavenId) {
+        return addDomDependency(management.getDependencies(), mavenId);
+    }
+
+    /**
+     * 添加依赖
+     *
+     * @author liuyang
+     * @since 2020-02-09 周日 17:12:48
+     */
+    public static MavenDomDependency addDomDependency(
+            @NotNull MavenDomDependencies dependencies,
+            MavenId mavenId) {
+        if (mavenId == null) {
+            return null;
         }
-        return dependency;
+        MavenDomDependency domDependency = dependencies.addDependency();
+        domDependency.getGroupId().setValue(mavenId.getGroupId());
+        domDependency.getArtifactId().setValue(mavenId.getArtifactId());
+        domDependency.getVersion().setValue(mavenId.getVersion());
+        return domDependency;
     }
 
     /**
-     *get dependency from <dependencies> where click
+     * 比较2个依赖的groupId、artifactId、version是否一致
      *
      * @author liuyang
-     * @date 2020-02-03 周一 14:46:19
-     * @param model
-     * @param editor
-     * @return
+     * @since 2020-02-03 周一 16:08:55
      */
-    public static MavenDomDependency getClickMavenDomDependency(
-        @NotNull MavenDomProjectModel model, @Nullable Editor editor) {
-        return getClickMavenDomDependency(model.getDependencies(), editor);
+    public static boolean equals(@NotNull MavenDomDependency d1,
+                                 @NotNull MavenDomDependency d2) {
+        boolean isSameGroupId = StringUtils.equals(d1.getGroupId().getValue(),
+                d2.getGroupId().getValue());
+        boolean isSameArtifactId = StringUtils.equals(d1.getArtifactId().getValue(),
+                d2.getArtifactId().getValue());
+        boolean isSameVersion = StringUtils.equals(d1.getVersion().getValue(),
+                d2.getVersion().getValue());
+
+        return isSameGroupId && isSameArtifactId && isSameVersion;
     }
 
     /**
-     *get dependency from <dependencyManagement> where click
+     * 寻找groupId、artifactId、version一致的依赖
      *
      * @author liuyang
-     * @date 2020-02-03 周一 14:46:49
-     * @param model
-     * @param editor
-     * @return
-     */
-    public static MavenDomDependency getClickDomManagementDependency(
-        @NotNull MavenDomProjectModel model, @Nullable Editor editor) {
-        MavenDomDependencyManagement management = model.getDependencyManagement();
-        if (management != null) {
-            return getClickMavenDomDependency(management.getDependencies(), editor);
-        }
-        return null;
-    }
-
-    /**
-     *get dependency from MavenDomDependencies where click
-     *
-     * @author liuyang
-     * @date 2020-02-03 周一 14:47:58
-     * @param dependencies
-     * @param editor
-     * @return
-     */
-    public static MavenDomDependency getClickMavenDomDependency(
-        @NotNull final MavenDomDependencies dependencies,
-        @Nullable final Editor editor) {
-        if (editor != null) {
-            int offset = editor.getCaretModel().getOffset();
-
-            List<MavenDomDependency> dependencyList = dependencies.getDependencies();
-
-            for (int i = 0; i < dependencyList.size(); i++) {
-                MavenDomDependency dependency = dependencyList.get(i);
-                XmlElement xmlElement = dependency.getXmlElement();
-
-                if (xmlElement != null
-                    && xmlElement.getTextRange().getStartOffset() <= offset
-                    && xmlElement.getTextRange().getEndOffset() >= offset
-                ) {
-                    return dependencyList.get(i);
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
-     *寻找groupId、artifactId、version一致的依赖
-     *
-     * @author liuyang
-     * @date 2020-02-03 周一 16:10:18
-     * @param model
-     * @param dependency
-     * @return
+     * @since 2020-02-03 周一 16:10:18
      */
     public static DependencyPair findDependency(
-        @NotNull final MavenDomProjectModel model,
-        @NotNull final MavenDomDependency dependency) {
+            @NotNull final MavenDomProjectModel model,
+            @NotNull final MavenDomDependency dependency) {
         DependencyPair pair = new DependencyPair();
         MavenDomDependency managementFound =
-            findDependency(model.getDependencyManagement(), dependency);
+                findDependency(model.getDependencyManagement(), dependency);
         MavenDomDependency found =
-            findDependency(model.getDependencies(), dependency);
+                findDependency(model.getDependencies(), dependency);
 
         pair.setManagementDependency(managementFound);
         pair.setDependency(found);
@@ -144,17 +109,14 @@ public class MavenDependencyUtil {
     }
 
     /**
-     *寻找groupId、artifactId、version一致的依赖
+     * 寻找groupId、artifactId、version一致的依赖
      *
      * @author liuyang
-     * @date 2020-02-03 周一 16:10:18
-     * @param management
-     * @param dependency
-     * @return
+     * @since 2020-02-03 周一 16:10:18
      */
     public static MavenDomDependency findDependency(
-        @NotNull final MavenDomDependencyManagement management,
-        @NotNull final MavenDomDependency dependency) {
+            @NotNull final MavenDomDependencyManagement management,
+            @NotNull final MavenDomDependency dependency) {
         if (management.getDependencies() == null) {
             return null;
         }
@@ -162,17 +124,14 @@ public class MavenDependencyUtil {
     }
 
     /**
-     *寻找groupId、artifactId、version一致的依赖
+     * 寻找groupId、artifactId、version一致的依赖
      *
      * @author liuyang
-     * @date 2020-02-03 周一 16:10:18
-     * @param dependencies
-     * @param dependency
-     * @return
+     * @since 2020-02-03 周一 16:10:18
      */
     public static MavenDomDependency findDependency(
-        @NotNull final MavenDomDependencies dependencies,
-        @NotNull final MavenDomDependency dependency) {
+            @NotNull final MavenDomDependencies dependencies,
+            @NotNull final MavenDomDependency dependency) {
         List<MavenDomDependency> list = dependencies.getDependencies();
         if (list != null && !list.isEmpty()) {
             for (MavenDomDependency e : list) {
@@ -185,22 +144,19 @@ public class MavenDependencyUtil {
     }
 
     /**
-     *寻找groupId、artifactId、version一致的依赖
+     * 寻找groupId、artifactId、version一致的依赖
      *
      * @author liuyang
-     * @date 2020-02-03 周一 16:10:18
-     * @param model
-     * @param mavenId
-     * @return
+     * @since 2020-02-03 周一 16:10:18
      */
     public static DependencyPair findDependency(
-        @NotNull final MavenDomProjectModel model,
-        @NotNull final MavenId mavenId) {
+            @NotNull final MavenDomProjectModel model,
+            @NotNull final MavenId mavenId) {
         DependencyPair pair = new DependencyPair();
         MavenDomDependency managementFound =
-            findDependency(model.getDependencyManagement(), mavenId);
+                findDependency(model.getDependencyManagement(), mavenId);
         MavenDomDependency found =
-            findDependency(model.getDependencies(), mavenId);
+                findDependency(model.getDependencies(), mavenId);
 
         pair.setManagementDependency(managementFound);
         pair.setDependency(found);
@@ -208,17 +164,14 @@ public class MavenDependencyUtil {
     }
 
     /**
-     *寻找groupId、artifactId、version一致的依赖
+     * 寻找groupId、artifactId、version一致的依赖
      *
      * @author liuyang
-     * @date 2020-02-03 周一 16:10:18
-     * @param management
-     * @param mavenId
-     * @return
+     * @since 2020-02-03 周一 16:10:18
      */
     public static MavenDomDependency findDependency(
-        @NotNull final MavenDomDependencyManagement management,
-        @NotNull final MavenId mavenId) {
+            @NotNull final MavenDomDependencyManagement management,
+            @NotNull final MavenId mavenId) {
         if (management.getDependencies() == null) {
             return null;
         }
@@ -226,23 +179,20 @@ public class MavenDependencyUtil {
     }
 
     /**
-     *寻找groupId、artifactId、version一致的依赖
+     * 寻找groupId、artifactId、version一致的依赖
      *
      * @author liuyang
-     * @date 2020-02-03 周一 16:10:18
-     * @param dependencies
-     * @param mavenId
-     * @return
+     * @since 2020-02-03 周一 16:10:18
      */
     public static MavenDomDependency findDependency(
-        @NotNull final MavenDomDependencies dependencies,
-        @NotNull final MavenId mavenId) {
+            @NotNull final MavenDomDependencies dependencies,
+            @NotNull final MavenId mavenId) {
         List<MavenDomDependency> list = dependencies.getDependencies();
         if (list != null && !list.isEmpty()) {
             for (MavenDomDependency e : list) {
                 MavenId item = MavenIdUtil.convert(e);
                 if (StringUtils.equals(mavenId.getGroupId(), item.getGroupId())
-                    && StringUtils.equals(mavenId.getArtifactId(), item.getArtifactId())) {
+                        && StringUtils.equals(mavenId.getArtifactId(), item.getArtifactId())) {
                     return e;
                 }
             }
@@ -251,45 +201,110 @@ public class MavenDependencyUtil {
     }
 
     /**
-     *比较2个依赖的groupId、artifactId、version是否一致
+     * 寻找点击的dependency标签
      *
      * @author liuyang
-     * @date 2020-02-03 周一 16:08:55
-     * @param d1
-     * @param d2
-     * @return
+     * @since 2020-02-03 周一 16:45:41
      */
-    public static boolean equals(@NotNull MavenDomDependency d1,
-        @NotNull MavenDomDependency d2) {
-        boolean isSameGroupId = StringUtils.equals(d1.getGroupId().getValue(),
-            d2.getGroupId().getValue());
-        boolean isSameArtifactId = StringUtils.equals(d1.getArtifactId().getValue(),
-            d2.getArtifactId().getValue());
-        boolean isSameVersion = StringUtils.equals(d1.getVersion().getValue(),
-            d2.getVersion().getValue());
+    public static XmlTag findDependencyTag(@NotNull PsiElement element) {
 
-        return isSameGroupId && isSameArtifactId && isSameVersion;
+        if (element instanceof XmlToken) {
+            PsiElement p = element.getParent();
+            XmlTag parentTag = null;
+            if (p instanceof XmlText parent) {
+                XmlToken nextSibling = (XmlToken) parent.getNextSibling();
+                parentTag = (XmlTag) nextSibling.getParent();
+
+            } else if (p instanceof XmlTag) {
+                parentTag = (XmlTag) p;
+            }
+
+            while (parentTag != null
+                    && !parentTag.toString()
+                    .replaceAll(PluginConst.XmlTag.PREFIX, "")
+                    .equalsIgnoreCase(PomTag.DEPENDENCY)) {
+                parentTag = parentTag.getParentTag();
+            }
+            return parentTag;
+        }
+        return null;
     }
 
     /**
-     *移除版本号
+     * get dependency from <dependencies> or <dependencyManagement> where click
      *
      * @author liuyang
-     * @date 2020-02-03 周一 16:18:57
-     * @param dependency
-     * @return
+     * @since 2020-02-03 周一 14:44:39
      */
-    public static void removeVersion(@NotNull MavenDomDependency dependency) {
-        dependency.getVersion().setStringValue(null);
+    public static MavenDomDependency getClickDependency(
+            @NotNull MavenDomProjectModel model, @Nullable Editor editor) {
+        MavenDomDependency dependency = getClickMavenDomDependency(model, editor);
+        if (dependency == null) {
+            return getClickDomManagementDependency(model, editor);
+        }
+        return dependency;
     }
 
     /**
-     *获取点击的MavenId
+     * get dependency from <dependencyManagement> where click
      *
      * @author liuyang
-     * @date 2020-02-03 周一 16:48:45
-     * @param e
-     * @return
+     * @since 2020-02-03 周一 14:46:49
+     */
+    public static MavenDomDependency getClickDomManagementDependency(
+            @NotNull MavenDomProjectModel model, @Nullable Editor editor) {
+        MavenDomDependencyManagement management = model.getDependencyManagement();
+        if (management != null) {
+            return getClickMavenDomDependency(management.getDependencies(), editor);
+        }
+        return null;
+    }
+
+    /**
+     * get dependency from <dependencies> where click
+     *
+     * @author liuyang
+     * @since 2020-02-03 周一 14:46:19
+     */
+    public static MavenDomDependency getClickMavenDomDependency(
+            @NotNull MavenDomProjectModel model, @Nullable Editor editor) {
+        return getClickMavenDomDependency(model.getDependencies(), editor);
+    }
+
+    /**
+     * get dependency from MavenDomDependencies where click
+     *
+     * @author liuyang
+     * @since 2020-02-03 周一 14:47:58
+     */
+    public static MavenDomDependency getClickMavenDomDependency(
+            @NotNull final MavenDomDependencies dependencies,
+            @Nullable final Editor editor) {
+        if (editor != null) {
+            int offset = editor.getCaretModel().getOffset();
+
+            List<MavenDomDependency> dependencyList = dependencies.getDependencies();
+
+            for (int i = 0; i < dependencyList.size(); i++) {
+                MavenDomDependency dependency = dependencyList.get(i);
+                XmlElement xmlElement = dependency.getXmlElement();
+
+                if (xmlElement != null
+                        && xmlElement.getTextRange().getStartOffset() <= offset
+                        && xmlElement.getTextRange().getEndOffset() >= offset
+                ) {
+                    return dependencyList.get(i);
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 获取点击的MavenId
+     *
+     * @author liuyang
+     * @since 2020-02-03 周一 16:48:45
      */
     public static MavenId getClickMavenId(@NotNull AnActionEvent e) {
         PsiElement psiElement = PsiUtil.getClickPsiElement(e);
@@ -297,12 +312,10 @@ public class MavenDependencyUtil {
     }
 
     /**
-     *获取点击的MavenId
+     * 获取点击的MavenId
      *
      * @author liuyang
-     * @date 2020-02-03 周一 16:48:45
-     * @param psiElement
-     * @return
+     * @since 2020-02-03 周一 16:48:45
      */
     @SuppressWarnings("all")
     public static MavenId getClickMavenId(@NotNull PsiElement psiElement) {
@@ -314,7 +327,7 @@ public class MavenDependencyUtil {
 
         //left store xml tag,right store xml value
         List<String> mavenIdTags = Lists.newArrayList(
-            PomTag.GROUP_ID, PomTag.ARTIFACT_ID, PomTag.VERSION);
+                PomTag.GROUP_ID, PomTag.ARTIFACT_ID, PomTag.VERSION);
 
         Map<String, String> map = new HashMap<>(4);
         for (String tag : mavenIdTags) {
@@ -326,77 +339,18 @@ public class MavenDependencyUtil {
 
         if (map.size() != 0) {
             return new MavenId(map.get(PomTag.GROUP_ID),
-                map.get(PomTag.ARTIFACT_ID), map.get(PomTag.VERSION));
+                    map.get(PomTag.ARTIFACT_ID), map.get(PomTag.VERSION));
         }
         return null;
     }
 
     /**
-     *寻找点击的dependency标签
+     * 移除版本号
      *
      * @author liuyang
-     * @date 2020-02-03 周一 16:45:41
-     * @param element
-     * @return
+     * @since 2020-02-03 周一 16:18:57
      */
-    public static XmlTag findDependencyTag(@NotNull PsiElement element) {
-
-        if (element instanceof XmlToken) {
-            PsiElement p = element.getParent();
-            XmlTag parentTag = null;
-            if (p instanceof XmlText) {
-                XmlText parent = (XmlText) p;
-                XmlToken nextSibling = (XmlToken) parent.getNextSibling();
-                parentTag = (XmlTag) nextSibling.getParent();
-
-            } else if (p instanceof XmlTag) {
-                parentTag = (XmlTag) p;
-            }
-
-            while (parentTag != null
-                && !parentTag.toString().replaceAll(PluginConst.XmlTag.PREFIX, "")
-                .equalsIgnoreCase(PomTag.DEPENDENCY)) {
-                parentTag = parentTag.getParentTag();
-            }
-            return parentTag;
-        }
-        return null;
-    }
-
-    /**
-     *添加依赖
-     *
-     * @author liuyang
-     * @date 2020-02-09 周日 17:12:35
-     * @param management management
-     * @param mavenId mavenId
-     * @return
-     */
-    public static MavenDomDependency addDomDependency(
-        @NotNull MavenDomDependencyManagement management,
-        MavenId mavenId) {
-        return addDomDependency(management.getDependencies(), mavenId);
-    }
-
-    /**
-     *添加依赖
-     *
-     * @author liuyang
-     * @date 2020-02-09 周日 17:12:48
-     * @param dependencies dependencies
-     * @param mavenId mavenId
-     * @return
-     */
-    public static MavenDomDependency addDomDependency(
-        @NotNull MavenDomDependencies dependencies,
-        MavenId mavenId) {
-        if (mavenId == null) {
-            return null;
-        }
-        MavenDomDependency domDependency = dependencies.addDependency();
-        domDependency.getGroupId().setValue(mavenId.getGroupId());
-        domDependency.getArtifactId().setValue(mavenId.getArtifactId());
-        domDependency.getVersion().setValue(mavenId.getVersion());
-        return domDependency;
+    public static void removeVersion(@NotNull MavenDomDependency dependency) {
+        dependency.getVersion().setStringValue(null);
     }
 }

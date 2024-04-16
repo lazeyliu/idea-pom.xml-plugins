@@ -7,9 +7,9 @@ import org.jetbrains.idea.maven.dom.model.MavenDomPlugin;
 import org.jetbrains.idea.maven.model.MavenId;
 
 /**
- *<p>
+ * <p>
  *
- *</p>
+ * </p>
  *
  * @author liuyang
  * @date 2020/2/3 周一 15:43:00
@@ -26,7 +26,7 @@ public class MavenIdUtil {
         }
 
         return new MavenId(dependency.getGroupId().getValue(),
-            dependency.getArtifactId().getValue(), dependency.getVersion().getValue());
+                dependency.getArtifactId().getValue(), dependency.getVersion().getValue());
     }
 
     public static MavenId convert(MavenDomPlugin plugin) {
@@ -35,16 +35,16 @@ public class MavenIdUtil {
         }
 
         return new MavenId(plugin.getGroupId().getValue(),
-            plugin.getArtifactId().getValue(), plugin.getVersion().getValue());
+                plugin.getArtifactId().getValue(), plugin.getVersion().getValue());
     }
 
     /**
-     *获取点击的MavenId
+     * 获取点击的MavenId
      *
-     * @author liuyang
-     * @date 2020-02-03 周一 16:48:45
      * @param psiElement
      * @return
+     * @author liuyang
+     * @date 2020-02-03 周一 16:48:45
      */
     @SuppressWarnings("all")
     public static MavenId getClickMavenId(@NotNull PsiElement psiElement) {

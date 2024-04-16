@@ -5,12 +5,8 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- *<p>
- *
- *</p>
- *
  * @author liuyang
- * @date 2020/2/8 周六 21:45:00
+ * @since 2020/2/8 周六 21:45:00
  * @since 1.0.0
  */
 public class Page<T> {
@@ -40,21 +36,21 @@ public class Page<T> {
         this.pageIndex = pageIndex;
     }
 
-    public Integer getPages() {
-        int extra = total % pageSize == 0 ? 0 : 1;
-        return (total / pageSize) + extra;
+    public List<T> getItems() {
+        return items;
     }
 
     public int getPageSize() {
         return pageSize;
     }
 
-    public int getTotal() {
-        return total;
+    public Integer getPages() {
+        int extra = total % pageSize == 0 ? 0 : 1;
+        return (total / pageSize) + extra;
     }
 
-    public List<T> getItems() {
-        return items;
+    public int getTotal() {
+        return total;
     }
 
     public boolean hasNextPage() {
@@ -80,11 +76,11 @@ public class Page<T> {
     @Override
     public String toString() {
         return "Page{" +
-            "items=" + items +
-            ", pageIndex=" + pageIndex +
-            ", pageSize=" + pageSize +
-            ", pages=" + getPages() +
-            ", total=" + total +
-            '}';
+                "items=" + items +
+                ", pageIndex=" + pageIndex +
+                ", pageSize=" + pageSize +
+                ", pages=" + getPages() +
+                ", total=" + total +
+                '}';
     }
 }

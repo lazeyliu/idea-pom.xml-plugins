@@ -8,9 +8,9 @@ import org.jetbrains.idea.maven.dom.model.MavenDomProjectModel;
 import org.jetbrains.idea.maven.dom.model.MavenDomProperties;
 
 /**
- *<p>
+ * <p>
  *
- *</p>
+ * </p>
  *
  * @author liuyang
  * @date 2020/2/3 周一 01:08:00
@@ -22,18 +22,14 @@ public class MavenPropertyUtil {
     }
 
     /**
-     *添加或者修改属性
+     * 添加或者修改属性
      *
      * @author liuyang
-     * @date 2020-02-03 周一 01:20:06
-     * @param model
-     * @param tag
-     * @param valueText
-     * @return
+     * @since 2020-02-03 周一 01:20:06
      */
     public static void addOrUpdateMavenProperty(@NotNull MavenDomProjectModel model,
-        @NotNull String tag,
-        @NotNull String valueText) {
+                                                @NotNull String tag,
+                                                @NotNull String valueText) {
         Preconditions.checkNotNull(model, NoNull.MavenDomProjectModel);
 
         MavenDomProperties mavenDomProperties = model.getProperties();

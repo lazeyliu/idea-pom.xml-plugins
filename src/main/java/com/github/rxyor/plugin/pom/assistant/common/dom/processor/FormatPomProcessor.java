@@ -1,22 +1,19 @@
 package com.github.rxyor.plugin.pom.assistant.common.dom.processor;
 
 import com.github.rxyor.plugin.pom.assistant.common.dom.model.FormatConfig;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import org.dom4j.Element;
 import org.dom4j.Node;
 import org.dom4j.Text;
 import org.dom4j.dom.DOMText;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
 /**
- *<p>
- *
- *</p>
- *
  * @author liuyang
- * @date 2020/2/6 周四 10:41:00
+ * @since 2020/2/6 周四 10:41:00
  * @since 1.0.0
  */
 public class FormatPomProcessor extends AbstractPomProcessor {

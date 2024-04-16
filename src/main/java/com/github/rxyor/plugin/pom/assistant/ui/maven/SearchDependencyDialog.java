@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 public class SearchDependencyDialog extends BaseDialog {
 
     private final static ExecutorService THREAD_POOL = Executors.newFixedThreadPool(4);
-
+    private final DefaultListModel<String> listModel = new DefaultListModel<>();
     private JPanel panel;
     private JTextField keywordTxt;
     private JButton searchBtn;
@@ -54,8 +54,6 @@ public class SearchDependencyDialog extends BaseDialog {
     private JButton copyBtn;
     private JButton addBtn;
     private JButton updateBtn;
-
-    private DefaultListModel<String> listModel = new DefaultListModel<>();
     private DependsSearchHelper searcher = null;
     private MavenId clickMavenId = null;
 
@@ -70,17 +68,96 @@ public class SearchDependencyDialog extends BaseDialog {
         this.init();
     }
 
+    /**
+     * 添加依赖
+     *
+     * @param mavenId
+     */
+    private void addDependency(MavenId mavenId) {
+        if (mavenId == null) {
+            return;
+        }
+
+        final PsiFile psiFile = PsiUtil.getPsiFile(e);
+        final MavenDomProjectModel model = MavenProjectUtil
+                .getMavenDomProjectModel(psiFile);
+
+        DependencyPair dependencyPair = MavenDependencyUtil
+                .findDependency(model, mavenId);
+        boolean exist = isExist(dependencyPair);
+        if (exist) {
+            NotificationUtil.warn("Warn", "Dependency is existed", project);
+        } else {
+            WriteCommandAction.runWriteCommandAction(
+                    PsiUtil.getProject(e),
+                    () -> {
+                        MavenDomDependencies domDependencies = model
+                                .getDependencyManagement().getDependencies();
+                        MavenDependencyUtil.addDomDependency(domDependencies, mavenId);
+                        PsiUtil.reformat(psiFile);
+                    });
+        }
+    }
+
+    /**
+     * 将数据添加到搜索列表当中
+     *
+     * @param page page
+     * @author liuyang
+     * @since 2020-02-09 周日 15:18:11
+     */
+    private void addToSearchListUI(Page<MavenId> page) {
+        if (page.getTotal() <= 0) {
+            return;
+        }
+
+        List<String> listData = page.getItems()
+                .stream()
+                .map(mavenId -> mavenId.getGroupId() + ":" + mavenId.getArtifactId())
+                .toList();
+
+        listData.forEach(s -> {
+            if (!listModel.contains(s)) {
+                listModel.addElement(s);
+            }
+        });
+        refreshSearchListUI();
+    }
+
+    /**
+     * 清空依赖面板的内容以及版本列表
+     */
+    private void clearDependDetailAndVersionListUI() {
+        dependDetail.setText("");
+        ListComboBoxModel<String> model = new ListComboBoxModel<>(new ArrayList<>(0));
+        versionBox.setModel(model);
+    }
+
     @Override
     protected void createUIComponents() {
     }
 
     /**
-     * 初始化
+     * 发起网络请求搜索依赖列表
+     *
+     * @author liuyang
+     * @since 2020-02-09 周日 15:08:32
      */
-    protected void init() {
-        super.setContentPane(panel);
-        this.initViewBindListener();
-        this.fillPreDataToUI();
+    private void doSearch(ActionEvent e) {
+        MavenId mavenId = this.parseMavenId(keywordTxt.getText());
+        Page<MavenId> page;
+        //如果是com.alibaba:fastjson这种唯一标识的关键字，不用模糊搜索
+        if (mavenId != null) {
+            List<MavenId> list = new ArrayList<>(1);
+            list.add(mavenId);
+            page = new Page<>(1, 10, 1, list);
+        } else {
+            searcher = DependsSearchHelper.builder().keyword(keywordTxt.getText()).build();
+            page = searcher.search();
+        }
+        listModel.clear();
+
+        this.addToSearchListUI(page);
     }
 
     /**
@@ -90,6 +167,71 @@ public class SearchDependencyDialog extends BaseDialog {
         if (clickMavenId != null) {
             keywordTxt.setText(clickMavenId.getGroupId() + ":" + clickMavenId.getArtifactId());
         }
+    }
+
+    /**
+     * 处理列表项点击事件
+     */
+    private void handleClickSearchItemEvent() {
+        String s = searchRetList.getSelectedValue();
+        clickMavenId = parseMavenId(s);
+
+        if (clickMavenId == null) {
+            clearDependDetailAndVersionListUI();
+            return;
+        }
+
+        //查询点击的依赖的所有版本号
+        List<String> versions = this.searchAndAddToVersionComboBoxUI(
+                clickMavenId.getGroupId(),
+                clickMavenId.getArtifactId()
+        );
+        if (!versions.isEmpty()) {
+            clickMavenId = new MavenId(
+                    clickMavenId.getGroupId(),
+                    clickMavenId.getArtifactId(),
+                    versions.get(0)
+            );
+            //填充到展示面板里
+            setToDependDetail(clickMavenId);
+        } else {
+            clearDependDetailAndVersionListUI();
+        }
+    }
+
+    /**
+     * 处理列表滑动底部事件
+     */
+    private void handleScrollBottomEvent(AdjustmentEvent e) {
+        int curH = e.getValue();
+        int barLen = scrollBar.getHeight();
+        int listH = searchRetList.getHeight();
+        if (isCloseToBottom(listH, curH, barLen)) {
+            nextPage();
+        }
+    }
+
+    /**
+     * 处理选择版本事件
+     */
+    private void handleSelectVersionEvent(ItemEvent e) {
+        if (ItemEvent.SELECTED == e.getStateChange()) {
+            clickMavenId = new MavenId(
+                    clickMavenId.getGroupId(),
+                    clickMavenId.getArtifactId(),
+                    e.getItem().toString()
+            );
+            setToDependDetail(clickMavenId);
+        }
+    }
+
+    /**
+     * 初始化
+     */
+    protected void init() {
+        super.setContentPane(panel);
+        this.initViewBindListener();
+        this.fillPreDataToUI();
     }
 
     /**
@@ -125,82 +267,25 @@ public class SearchDependencyDialog extends BaseDialog {
     }
 
     /**
-     * 处理列表滑动底部事件
-     */
-    private void handleScrollBottomEvent(AdjustmentEvent e) {
-        int curH = e.getValue();
-        int barLen = scrollBar.getHeight();
-        int listH = searchRetList.getHeight();
-        if (isCloseToBottom(listH, curH, barLen)) {
-            nextPage();
-        }
-    }
-
-    /**
-     * 处理列表项点击事件
-     */
-    private void handleClickSearchItemEvent() {
-        String s = searchRetList.getSelectedValue();
-        clickMavenId = parseMavenId(s);
-
-        if (clickMavenId == null) {
-            clearDependDetailAndVersionListUI();
-            return;
-        }
-
-        //查询点击的依赖的所有版本号
-        List<String> versions = this.searchAndAddToVersionComboBoxUI(
-                clickMavenId.getGroupId(),
-                clickMavenId.getArtifactId()
-        );
-        if (!versions.isEmpty()) {
-            clickMavenId = new MavenId(
-                    clickMavenId.getGroupId(),
-                    clickMavenId.getArtifactId(),
-                    versions.get(0)
-            );
-            //填充到展示面板里
-            setToDependDetail(clickMavenId);
-        } else {
-            clearDependDetailAndVersionListUI();
-        }
-    }
-
-    /**
-     * 处理选择版本事件
-     */
-    private void handleSelectVersionEvent(ItemEvent e) {
-        if (ItemEvent.SELECTED == e.getStateChange()) {
-            clickMavenId = new MavenId(
-                    clickMavenId.getGroupId(),
-                    clickMavenId.getArtifactId(),
-                    e.getItem().toString()
-            );
-            setToDependDetail(clickMavenId);
-        }
-    }
-
-    /**
-     * 发起网络请求搜索依赖列表
+     * 滑条是否接近底部了
      *
+     * @param listH  listH
+     * @param curH   curH
+     * @param barLen barLen
      * @author liuyang
-     * @since 2020-02-09 周日 15:08:32
+     * @since 2020-02-09 周日 15:21:41
      */
-    private void doSearch(ActionEvent e) {
-        MavenId mavenId = this.parseMavenId(keywordTxt.getText());
-        Page<MavenId> page;
-        //如果是com.alibaba:fastjson这种唯一标识的关键字，不用模糊搜索
-        if (mavenId != null) {
-            List<MavenId> list = new ArrayList<>(1);
-            list.add(mavenId);
-            page = new Page<>(1, 10, 1, list);
-        } else {
-            searcher = DependsSearchHelper.builder().keyword(keywordTxt.getText()).build();
-            page = searcher.search();
+    private boolean isCloseToBottom(int listH, int curH, int barLen) {
+        if (listH == 0) {
+            return true;
         }
-        listModel.clear();
+        int dValue = listH / 5;
+        return listH - (curH + barLen) <= dValue;
+    }
 
-        this.addToSearchListUI(page);
+    private boolean isExist(DependencyPair pair) {
+        return pair != null &&
+                (pair.getManagementDependency() != null || pair.getDependency() != null);
     }
 
     /**
@@ -217,28 +302,17 @@ public class SearchDependencyDialog extends BaseDialog {
     }
 
     /**
-     * 将数据添加到搜索列表当中
-     *
-     * @param page page
-     * @author liuyang
-     * @since 2020-02-09 周日 15:18:11
+     * 解析字符串为MavenId
      */
-    private void addToSearchListUI(Page<MavenId> page) {
-        if (page.getTotal() <= 0) {
-            return;
+    private MavenId parseMavenId(String s) {
+        List<String> splitList = Splitter.on(":")
+                .omitEmptyStrings()
+                .trimResults()
+                .splitToList(s);
+        if (splitList.size() < 2) {
+            return null;
         }
-
-        List<String> listData = page.getItems()
-                .stream()
-                .map(mavenId -> mavenId.getGroupId() + ":" + mavenId.getArtifactId())
-                .toList();
-
-        listData.forEach(s -> {
-            if (!listModel.contains(s)) {
-                listModel.addElement(s);
-            }
-        });
-        refreshSearchListUI();
+        return new MavenId(splitList.get(0), splitList.get(1), null);
     }
 
     /**
@@ -252,20 +326,14 @@ public class SearchDependencyDialog extends BaseDialog {
     }
 
     /**
-     * 滑条是否接近底部了
-     *
-     * @param listH  listH
-     * @param curH   curH
-     * @param barLen barLen
-     * @author liuyang
-     * @since 2020-02-09 周日 15:21:41
+     * 刷新版本号下拉列表
      */
-    private boolean isCloseToBottom(int listH, int curH, int barLen) {
-        if (listH == 0) {
-            return true;
+    private void refreshVersionComboBoxUI(List<String> list) {
+        if (list == null) {
+            list = new ArrayList<>(0);
         }
-        int dValue = listH / 5;
-        return listH - (curH + barLen) <= dValue;
+        ListComboBoxModel<String> model = new ListComboBoxModel<>(list);
+        versionBox.setModel(model);
     }
 
     /**
@@ -289,17 +357,6 @@ public class SearchDependencyDialog extends BaseDialog {
         List<MavenId> list = ListVersionHelper.list(groupId, artifactId);
         return list.stream().map(MavenId::getVersion).filter(StringUtils::isNotBlank)
                 .distinct().collect(Collectors.toList());
-    }
-
-    /**
-     * 刷新版本号下拉列表
-     */
-    private void refreshVersionComboBoxUI(List<String> list) {
-        if (list == null) {
-            list = new ArrayList<>(0);
-        }
-        ListComboBoxModel<String> model = new ListComboBoxModel<>(list);
-        versionBox.setModel(model);
     }
 
     /**
@@ -328,60 +385,6 @@ public class SearchDependencyDialog extends BaseDialog {
         sb.append("</dependency>");
 
         dependDetail.setText(sb.toString());
-    }
-
-    /**
-     * 清空依赖面板的内容以及版本列表
-     */
-    private void clearDependDetailAndVersionListUI() {
-        dependDetail.setText("");
-        ListComboBoxModel<String> model = new ListComboBoxModel<>(new ArrayList<>(0));
-        versionBox.setModel(model);
-    }
-
-    /**
-     * 解析字符串为MavenId
-     */
-    private MavenId parseMavenId(String s) {
-        List<String> splitList = Splitter.on(":")
-                .omitEmptyStrings()
-                .trimResults()
-                .splitToList(s);
-        if (splitList.size() < 2) {
-            return null;
-        }
-        return new MavenId(splitList.get(0), splitList.get(1), null);
-    }
-
-    /**
-     * 添加依赖
-     *
-     * @param mavenId
-     */
-    private void addDependency(MavenId mavenId) {
-        if (mavenId == null) {
-            return;
-        }
-
-        final PsiFile psiFile = PsiUtil.getPsiFile(e);
-        final MavenDomProjectModel model = MavenProjectUtil
-                .getMavenDomProjectModel(psiFile);
-
-        DependencyPair dependencyPair = MavenDependencyUtil
-                .findDependency(model, mavenId);
-        boolean exist = isExist(dependencyPair);
-        if (exist) {
-            NotificationUtil.warn("Warn", "Dependency is existed", project);
-        } else {
-            WriteCommandAction.runWriteCommandAction(
-                    PsiUtil.getProject(e),
-                    () -> {
-                        MavenDomDependencies domDependencies = model
-                                .getDependencyManagement().getDependencies();
-                        MavenDependencyUtil.addDomDependency(domDependencies, mavenId);
-                        PsiUtil.reformat(psiFile);
-                    });
-        }
     }
 
     /**
@@ -414,10 +417,5 @@ public class SearchDependencyDialog extends BaseDialog {
             }
             PsiUtil.reformat(psiFile);
         });
-    }
-
-    private boolean isExist(DependencyPair pair) {
-        return pair != null &&
-                (pair.getManagementDependency() != null || pair.getDependency() != null);
     }
 }

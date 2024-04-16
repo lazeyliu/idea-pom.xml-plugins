@@ -15,9 +15,9 @@ import com.intellij.psi.codeStyle.CodeStyleManager;
 import org.jetbrains.annotations.NotNull;
 
 /**
- *<p>
+ * <p>
  *
- *</p>
+ * </p>
  *
  * @author liuyang
  * @date 2020/2/2 周日 21:50:00
@@ -29,36 +29,12 @@ public class PsiUtil {
     }
 
     /**
-     *get Project from AnActionEvent
-     *
-     * @author liuyang
-     * @date 2020-02-03 周一 00:17:41
-     * @param e
-     * @return
-     */
-    public static Project getProject(@NotNull AnActionEvent e) {
-        return e.getData(PlatformDataKeys.PROJECT);
-    }
-
-    /**
-     *get PsiFile from AnActionEvent
-     *
-     * @author liuyang
-     * @date 2020-02-03 周一 00:17:41
-     * @param e
-     * @return
-     */
-    public static VirtualFile getVirtualFile(@NotNull AnActionEvent e) {
-        return e.getData(CommonDataKeys.VIRTUAL_FILE);
-    }
-
-    /**
      * get PsiElement where click
      *
-     * @author liuyang
-     * @date 2020-02-02 周日 22:30:10
      * @param e
      * @return
+     * @author liuyang
+     * @date 2020-02-02 周日 22:30:10
      */
     public static PsiElement getClickPsiElement(AnActionEvent e) {
         Preconditions.checkNotNull(e, NoNull.AnActionEvent);
@@ -71,26 +47,24 @@ public class PsiUtil {
     }
 
     /**
-     *get PsiFile from AnActionEvent
+     * get Document from PsiFile
      *
-     * @author liuyang
-     * @date 2020-02-03 周一 00:17:41
-     * @param e
+     * @param psiFile
      * @return
+     * @author liuyang
+     * @date 2020-02-06 周四 00:59:05
      */
-    public static PsiFile getPsiFile(AnActionEvent e) {
-        Preconditions.checkNotNull(e, NoNull.AnActionEvent);
-
-        return e.getData(CommonDataKeys.PSI_FILE);
+    public static Document getDocument(@NotNull PsiFile psiFile) {
+        return psiFile.getViewProvider().getDocument();
     }
 
     /**
-     *get Editor from AnActionEvent
+     * get Editor from AnActionEvent
      *
-     * @author liuyang
-     * @date 2020-02-03 周一 00:17:41
      * @param e
      * @return
+     * @author liuyang
+     * @date 2020-02-03 周一 00:17:41
      */
     public static Editor getEditor(AnActionEvent e) {
         Preconditions.checkNotNull(e, NoNull.AnActionEvent);
@@ -99,51 +73,77 @@ public class PsiUtil {
     }
 
     /**
-     *get Document from PsiFile
+     * get Project from AnActionEvent
      *
-     * @author liuyang
-     * @date 2020-02-06 周四 00:59:05
-     * @param psiFile
+     * @param e
      * @return
+     * @author liuyang
+     * @date 2020-02-03 周一 00:17:41
      */
-    public static Document getDocument(@NotNull PsiFile psiFile) {
-        return psiFile.getViewProvider().getDocument();
+    public static Project getProject(@NotNull AnActionEvent e) {
+        return e.getData(PlatformDataKeys.PROJECT);
     }
 
     /**
-     *get Document from PsiFile
+     * get PsiFile from AnActionEvent
      *
+     * @param e
+     * @return
      * @author liuyang
-     * @date 2020-02-06 周四 00:59:05
+     * @date 2020-02-03 周一 00:17:41
+     */
+    public static PsiFile getPsiFile(AnActionEvent e) {
+        Preconditions.checkNotNull(e, NoNull.AnActionEvent);
+
+        return e.getData(CommonDataKeys.PSI_FILE);
+    }
+
+    /**
+     * get Document from PsiFile
+     *
      * @param psiFile
      * @return
+     * @author liuyang
+     * @date 2020-02-06 周四 00:59:05
      */
     public static String getText(@NotNull PsiFile psiFile) {
         return getDocument(psiFile).getText();
     }
 
     /**
-     *refresh butter/temp/cache
+     * get PsiFile from AnActionEvent
      *
-     * @author liuyang
-     * @date 2020-02-03 周一 02:12:05
-     * @param psiFile
+     * @param e
      * @return
+     * @author liuyang
+     * @date 2020-02-03 周一 00:17:41
      */
-    public static void refresh(@NotNull PsiFile psiFile) {
-        psiFile.getVirtualFile().refresh(true, false);
+    public static VirtualFile getVirtualFile(@NotNull AnActionEvent e) {
+        return e.getData(CommonDataKeys.VIRTUAL_FILE);
     }
 
     /**
-     *reformat file
+     * reformat file
      *
-     * @author liuyang
-     * @date 2020-02-03 周一 02:13:37
      * @param psiFile
      * @return
+     * @author liuyang
+     * @date 2020-02-03 周一 02:13:37
      */
     public static void reformat(@NotNull PsiFile psiFile) {
         CodeStyleManager.getInstance(psiFile.getProject()).reformat(psiFile);
+    }
+
+    /**
+     * refresh butter/temp/cache
+     *
+     * @param psiFile
+     * @return
+     * @author liuyang
+     * @date 2020-02-03 周一 02:12:05
+     */
+    public static void refresh(@NotNull PsiFile psiFile) {
+        psiFile.getVirtualFile().refresh(true, false);
     }
 
 }

@@ -21,34 +21,40 @@ import org.jetbrains.idea.maven.dom.model.MavenDomProjectModel;
 import org.jetbrains.idea.maven.model.MavenId;
 
 /**
- * <p>
- *
- * </p>
- *
  * @author liuyang
- * @date 2020/1/27 周一 15:31:00
+ * @since 2020/1/27 周一 15:31:00
  * @since 1.0.0
  */
 public class ExtractVersionAction extends AbstractPomAction {
 
     @Override
-    public @NotNull ActionUpdateThread getActionUpdateThread() {
-        return ActionUpdateThread.BGT;
+    public void actionPerformed(@NotNull AnActionEvent e) {
+        CommandProcessor.getInstance()
+                .executeCommand(
+                        e.getProject(),
+                        () -> extractAndReplaceVersion(e),
+                        App.GROUP_ID,
+                        App.GROUP_ID
+                );
     }
 
-    @Override
-    public void actionPerformed(@NotNull AnActionEvent e) {
-        CommandProcessor.getInstance().executeCommand(e.getProject(),
-                (Runnable) () -> {
-                    extractAndReplaceVersion(e);
-                }
-                , App.GROUP_ID, App.GROUP_ID);
+    /**
+     * 检查点击依赖是否有效
+     */
+    private boolean checkClickDependency(MavenId mavenId) {
+        if (mavenId == null) {
+            NotificationUtil.warn("Warn", "Click xml tag is not valid dependency tag");
+            return true;
+        }
+        if (StringUtils.contains(mavenId.getVersion(), "$")) {
+            NotificationUtil.warn("Warn", "Click dependency has replaced by placeholder");
+            return true;
+        }
+        return false;
     }
 
     /**
      * 提取并替换占位符
-     *
-     * @param e
      */
     private void extractAndReplaceVersion(final AnActionEvent e) {
         final PsiFile psiFile = PsiUtil.getPsiFile(e);
@@ -56,8 +62,7 @@ public class ExtractVersionAction extends AbstractPomAction {
             return;
         }
         final PsiElement psiElement = PsiUtil.getClickPsiElement(e);
-        final MavenDomProjectModel model = MavenProjectUtil
-                .getMavenDomProjectModel(psiFile);
+        final MavenDomProjectModel model = MavenProjectUtil.getMavenDomProjectModel(psiFile);
 
         TagType tagType = MavenUtil.findClickParentTagType(psiElement);
         if (tagType == null) {
@@ -88,6 +93,29 @@ public class ExtractVersionAction extends AbstractPomAction {
         });
     }
 
+    @Override
+    public @NotNull ActionUpdateThread getActionUpdateThread() {
+        return ActionUpdateThread.BGT;
+    }
+
+    /**
+     * 移除版本号
+     */
+    private void removeVersion(DependencyPair pair) {
+        if (pair.getManagementDependency() != null && pair.getDependency() != null) {
+            MavenDependencyUtil.removeVersion(pair.getDependency());
+        }
+    }
+
+    /**
+     * 移除版本号
+     */
+    private void removeVersion(PluginPair pair) {
+        if (pair.getManagementPlugin() != null && pair.getPlugin() != null) {
+            MavenPluginUtil.removeVersion(pair.getPlugin());
+        }
+    }
+
     private void replaceAndRemoveForDependency(MavenDomProjectModel model, MavenId mavenId, String placeholder) {
         DependencyPair dependencyPair = MavenDependencyUtil
                 .findDependency(model, mavenId);
@@ -111,39 +139,7 @@ public class ExtractVersionAction extends AbstractPomAction {
     }
 
     /**
-     * 检查点击依赖是否有效
-     *
-     * @param mavenId
-     * @return
-     */
-    private boolean checkClickDependency(MavenId mavenId) {
-        if (mavenId == null) {
-            NotificationUtil.warn("Warn", "Click xml tag is not valid dependency tag");
-            return true;
-        }
-        if (StringUtils.contains(mavenId.getVersion(), "$")) {
-            NotificationUtil.warn("Warn", "Click dependency has replaced by placeholder");
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * 移除版本号
-     *
-     * @param pair
-     */
-    private void removeVersion(DependencyPair pair) {
-        if (pair.getManagementDependency() != null && pair.getDependency() != null) {
-            MavenDependencyUtil.removeVersion(pair.getDependency());
-        }
-    }
-
-    /**
      * 设置版本号
-     *
-     * @param dependency
-     * @param version
      */
     private void resetVersion(MavenDomDependency dependency, String version) {
         if (dependency != null) {
@@ -152,21 +148,7 @@ public class ExtractVersionAction extends AbstractPomAction {
     }
 
     /**
-     * 移除版本号
-     *
-     * @param pair
-     */
-    private void removeVersion(PluginPair pair) {
-        if (pair.getManagementPlugin() != null && pair.getPlugin() != null) {
-            MavenPluginUtil.removeVersion(pair.getPlugin());
-        }
-    }
-
-    /**
      * 设置版本号
-     *
-     * @param plugin
-     * @param version
      */
     private void resetVersion(MavenDomPlugin plugin, String version) {
         if (plugin != null) {

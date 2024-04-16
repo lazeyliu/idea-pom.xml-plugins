@@ -63,7 +63,7 @@
     </change-notes>
 
     <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Build+Number+Ranges for description -->
-    <idea-version since-build="222.3345" until-build="241.*" />
+    <idea-version since-build="222.3345" until-build="241.*"/>
 
     <!-- please see https://confluence.jetbrains.com/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
          on how to target different products -->
@@ -84,41 +84,50 @@
                 class="com.github.rxyor.plugin.pom.assistant.action.SortAction"
                 text="Sort"
                 description="sort pom tag">
-            <add-to-group group-id="ProjectViewPopupMenu"/>
+            <!--            <add-to-group group-id="ProjectViewPopupMenu"/>-->
         </action>
         <action id="GroupSortAction"
                 class="com.github.rxyor.plugin.pom.assistant.action.GroupSortAction"
                 text="Sort Group"
                 description="sort pom tag by comment group">
-            <add-to-group group-id="ProjectViewPopupMenu"/>
+            <!--            <add-to-group group-id="ProjectViewPopupMenu"/>-->
         </action>
         <action id="ExtractVersionAction"
                 class="com.github.rxyor.plugin.pom.assistant.action.ExtractVersionAction"
                 text="Replace Version"
                 description="extract version and replace placeholder">
-            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+            <!--            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>-->
         </action>
-<!--        <action id="SearchAction"-->
-<!--                class="com.github.rxyor.plugin.pom.assistant.action.SearchAction"-->
-<!--                text="Search"-->
-<!--                description="sort pom tag by comment group">-->
-<!--            <add-to-group group-id="ProjectViewPopupMenu"/>-->
-<!--        </action>-->
+        <!--        <action id="SearchAction"-->
+        <!--                class="com.github.rxyor.plugin.pom.assistant.action.SearchAction"-->
+        <!--                text="Search"-->
+        <!--                description="sort pom tag by comment group">-->
+        <!--            <add-to-group group-id="ProjectViewPopupMenu"/>-->
+        <!--        </action>-->
 
         <group id="PomAssistant"
                text="Pom Assistant"
                popup="true"
                icon="/icons/maven.svg"
         >
+            <!-- 文件邮件菜单 -->
             <add-to-group group-id="EditorPopupMenu"
                           anchor="after"
-                          relative-to-action="ShowIntentionsGroup"/>
-
+                          relative-to-action="Maven"/>
+            <!-- 项目邮件菜单 -->
+            <add-to-group group-id="ProjectViewPopupMenu"
+                          anchor="after"
+                          relative-to-action="Maven"/>
+            <!-- 顶部菜单 -->
             <add-to-group group-id="ToolsMenu" anchor="last"/>
-            <reference ref="ExtractVersionAction"/>
+
+            <!-- 关联排序-->
             <reference ref="SortAction"/>
+            <!-- 关联分组排序-->
             <reference ref="GroupSortAction"/>
-<!--            <reference ref="SearchAction"/>-->
+            <!-- 关联抽取版本号-->
+            <reference ref="ExtractVersionAction"/>
+            <!--            <reference ref="SearchAction"/>-->
         </group>
     </actions>
 

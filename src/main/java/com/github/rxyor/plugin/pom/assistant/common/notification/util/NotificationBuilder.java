@@ -36,6 +36,27 @@ public class NotificationBuilder {
         return new NotificationBuilder();
     }
 
+    public Notification build() {
+        Notification notification = new Notification(
+                this.myGroupId,
+                this.myContent,
+                this.myType);
+        return notification.setIcon(this.getMyIcon())
+                .setTitle(this.getMyTitle())
+                .setSubtitle(this.getMySubtitle())
+                .addAction(myAnAction);
+    }
+
+    public NotificationBuilder myAnAction(NotificationAction myAnAction) {
+        this.myAnAction = myAnAction;
+        return this;
+    }
+
+    public NotificationBuilder myContent(String myContent) {
+        this.myContent = myContent;
+        return this;
+    }
+
     public NotificationBuilder myGroupId(String myGroupId) {
         this.myGroupId = myGroupId;
         return this;
@@ -46,8 +67,8 @@ public class NotificationBuilder {
         return this;
     }
 
-    public NotificationBuilder myType(NotificationType myType) {
-        this.myType = myType;
+    public NotificationBuilder mySubtitle(String mySubtitle) {
+        this.mySubtitle = mySubtitle;
         return this;
     }
 
@@ -56,31 +77,9 @@ public class NotificationBuilder {
         return this;
     }
 
-    public NotificationBuilder mySubtitle(String mySubtitle) {
-        this.mySubtitle = mySubtitle;
+    public NotificationBuilder myType(NotificationType myType) {
+        this.myType = myType;
         return this;
-    }
-
-    public NotificationBuilder myContent(String myContent) {
-        this.myContent = myContent;
-        return this;
-    }
-
-
-    public NotificationBuilder myAnAction(NotificationAction myAnAction) {
-        this.myAnAction = myAnAction;
-        return this;
-    }
-
-    public Notification build() {
-        Notification notification = new Notification(
-                this.myGroupId,
-                this.myContent,
-                this.myType);
-        return notification.setIcon(this.getMyIcon())
-                .setTitle(this.getMyTitle())
-                .setSubtitle(this.getMySubtitle())
-                .addAction(myAnAction);
     }
 
 }

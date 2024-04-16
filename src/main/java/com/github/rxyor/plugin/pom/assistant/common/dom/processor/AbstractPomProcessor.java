@@ -1,8 +1,5 @@
 package com.github.rxyor.plugin.pom.assistant.common.dom.processor;
 
-import java.io.StringWriter;
-import java.util.LinkedList;
-import java.util.List;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.DocumentHelper;
@@ -10,13 +7,13 @@ import org.dom4j.io.OutputFormat;
 import org.dom4j.io.XMLWriter;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.StringWriter;
+import java.util.LinkedList;
+import java.util.List;
+
 /**
- *<p>
- *
- *</p>
- *
  * @author liuyang
- * @date 2020/2/4 周二 21:02:00
+ * @since 2020/2/4 周二 21:02:00
  * @since 1.0.0
  */
 public abstract class AbstractPomProcessor {
@@ -30,7 +27,7 @@ public abstract class AbstractPomProcessor {
             processors.add(this);
         } catch (DocumentException e) {
             throw new IllegalArgumentException(String.format(
-                "Select file is invalid, errors[%s]", e.getMessage()));
+                    "Select file is invalid, errors[%s]", e.getMessage()));
         }
     }
 
